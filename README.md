@@ -22,3 +22,7 @@ Create migrations:
 https://docs.djangoproject.com/en/6.0/intro/tutorial02/
 > python manage.py makemigrations
 python manage.py migrate
+
+Create tests in /reservations/tests.py
+Use TDD (Test Driven Development) to test before writing more code
+> python manage.py test reservations
