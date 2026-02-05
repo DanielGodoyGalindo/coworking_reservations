@@ -19,10 +19,10 @@ def create_reservation(*, user, room, date, start_time, end_time):
             Reservation.Status.CONFIRMED,
         ],
         # existing reservations start time is less or equal than new reservation end time
-        # existing 13:00-15:00 and new 12:00h-14:00h --> 13:00 < 14:00 (overlap)
+        # e.g. existing 13:00-15:00 and new 12:00h-14:00h --> 13:00 < 14:00 (overlap)
         start_time__lt=end_time,
         # existing reservations end time is greater or equal than new reservation start time
-        # existing 9:00-11:00 and new 10:00h-12:00h --> 11:00 > 10:00 (overlap)
+        # e.g. existing 9:00-11:00 and new 10:00h-12:00h --> 11:00 > 10:00 (overlap)
         end_time__gt=start_time,
     ).exists()
 
