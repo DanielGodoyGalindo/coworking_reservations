@@ -1,16 +1,13 @@
 from django.test import TestCase
-
-# Create your tests here.
 import datetime
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.core.exceptions import ValidationError
-
 from rooms.models import Room
 from reservations.models import Reservation
 from reservations.services import create_reservation
 
+# Create your tests here.
 
 User = get_user_model()
 
