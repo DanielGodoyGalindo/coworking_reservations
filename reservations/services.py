@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
-
 from reservations.models import Reservation
+import datetime
 
 
 @transaction.atomic
@@ -38,3 +38,34 @@ def create_reservation(*, user, room, date, start_time, end_time):
         end_time=end_time,
     )
     return reservation
+
+
+def get_available_slots(*, room, date):
+    OPEN_TIME = datetime.time(8, 0)
+    CLOSE_TIME = datetime.time(18, 0)
+
+    # Get today active reservations ordered
+    reservations = Reservation.objects.filter(
+        room=room,
+        date=date,
+        status__in=[
+            Reservation.Status.PENDING,
+            Reservation.Status.CONFIRMED,
+        ],
+    ).order_by("start_time")
+
+    available_slots = []
+    current_start = OPEN_TIME
+
+    # Get available times from reservations
+    for reservation in reservations:
+        if reservation.start_time > current_start:
+            available_slots.append((current_start, reservation.start_time))
+
+        current_start = max(current_start, reservation.end_time)
+
+    # Last slots
+    if current_start < CLOSE_TIME:
+        available_slots.append((current_start, CLOSE_TIME))
+
+    return available_slots
