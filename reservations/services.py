@@ -40,11 +40,10 @@ def create_reservation(*, user, room, date, start_time, end_time):
     return reservation
 
 
-def get_available_slots(*, room, date):
+def get_available_slots(*, room, date, minimum_minutes=None):
     OPEN_TIME = datetime.time(8, 0)
     CLOSE_TIME = datetime.time(18, 0)
 
-    # Get today active reservations ordered
     reservations = Reservation.objects.filter(
         room=room,
         date=date,
@@ -57,15 +56,25 @@ def get_available_slots(*, room, date):
     available_slots = []
     current_start = OPEN_TIME
 
-    # Get available times from reservations
+    def slot_is_long_enough(start, end):
+        if minimum_minutes is None:
+            return True
+
+        start_dt = datetime.datetime.combine(date, start)
+        end_dt = datetime.datetime.combine(date, end)
+
+        duration = (end_dt - start_dt).total_seconds() / 60
+        return duration >= minimum_minutes
+
     for reservation in reservations:
         if reservation.start_time > current_start:
-            available_slots.append((current_start, reservation.start_time))
+            if slot_is_long_enough(current_start, reservation.start_time):
+                available_slots.append((current_start, reservation.start_time))
 
         current_start = max(current_start, reservation.end_time)
 
-    # Last slots
     if current_start < CLOSE_TIME:
-        available_slots.append((current_start, CLOSE_TIME))
+        if slot_is_long_enough(current_start, CLOSE_TIME):
+            available_slots.append((current_start, CLOSE_TIME))
 
     return available_slots

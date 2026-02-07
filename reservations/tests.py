@@ -137,8 +137,8 @@ class ReservationOverlapTest(TestCase):
                 end_time=datetime.time(9, 0),
             )
 
-class AvailabilityTest(TestCase):
 
+class AvailabilityTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username="user1",
@@ -160,9 +160,9 @@ class AvailabilityTest(TestCase):
             slots,
             [
                 (datetime.time(8, 0), datetime.time(18, 0)),
-            ]
+            ],
         )
-        
+
     def test_availability_with_one_reservation(self):
         Reservation.objects.create(
             user=self.user,
@@ -182,9 +182,9 @@ class AvailabilityTest(TestCase):
             [
                 (datetime.time(8, 0), datetime.time(10, 0)),
                 (datetime.time(12, 0), datetime.time(18, 0)),
-            ]
+            ],
         )
-        
+
     def test_availability_with_multiple_reservations(self):
         Reservation.objects.create(
             user=self.user,
@@ -213,5 +213,63 @@ class AvailabilityTest(TestCase):
                 (datetime.time(8, 0), datetime.time(9, 0)),
                 (datetime.time(10, 0), datetime.time(13, 0)),
                 (datetime.time(14, 0), datetime.time(18, 0)),
-            ]
+            ],
+        )
+
+    def test_short_slots_are_filtered_out(self):
+        Reservation.objects.create(
+            user=self.user,
+            room=self.room,
+            date=datetime.date(2026, 1, 10),
+            start_time=datetime.time(8, 0),
+            end_time=datetime.time(8, 20),
+        )
+
+        Reservation.objects.create(
+            user=self.user,
+            room=self.room,
+            date=datetime.date(2026, 1, 10),
+            start_time=datetime.time(8, 40),
+            end_time=datetime.time(18, 0),
+        )
+
+        slots = get_available_slots(
+            room=self.room,
+            date=datetime.date(2026, 1, 10),
+            minimum_minutes=30,
+        )
+
+        self.assertEqual(slots, [])
+
+    def test_slot_equal_to_minimum_duration_is_allowed(self):
+        Reservation.objects.create(
+            user=self.user,
+            room=self.room,
+            date=datetime.date(2026, 1, 10),
+            start_time=datetime.time(9, 0),
+            end_time=datetime.time(9, 30),
+        )
+
+        slots = get_available_slots(
+            room=self.room,
+            date=datetime.date(2026, 1, 10),
+            minimum_minutes=30,
+        )
+
+        self.assertIn(
+            (datetime.time(8, 0), datetime.time(9, 0)),
+            slots,
+        )
+
+    def test_without_minimum_duration_returns_all_slots(self):
+        slots = get_available_slots(
+            room=self.room,
+            date=datetime.date(2026, 1, 10),
+        )
+
+        self.assertEqual(
+            slots,
+            [
+                (datetime.time(8, 0), datetime.time(18, 0)),
+            ],
         )
