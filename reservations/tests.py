@@ -272,4 +272,5 @@ class AvailabilityTest(TestCase):
             [
                 (datetime.time(8, 0), datetime.time(18, 0)),
             ],
+            msg=f"got {slots}", # print message only when test fails
         )

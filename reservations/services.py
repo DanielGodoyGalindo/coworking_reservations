@@ -70,7 +70,6 @@ def get_available_slots(*, room, date, minimum_minutes=None):
         if reservation.start_time > current_start:
             if slot_is_long_enough(current_start, reservation.start_time):
                 available_slots.append((current_start, reservation.start_time))
-
         current_start = max(current_start, reservation.end_time)
 
     if current_start < CLOSE_TIME:
