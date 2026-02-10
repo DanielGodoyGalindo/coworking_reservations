@@ -32,3 +32,15 @@ Django Admin -> Create room for testing
 Add reservations/api/views.py
 Create function availability_view(request) to test api
 Go to http://127.0.0.1:8000/api/availability/?room_id=1&date=2026-02-10 to check if it's working properly
+
+Create function create_reservation in reservation/services.py
+Test with POSTMAN
+> POST http://127.0.0.1:8000/api/reservations/
+> header -> Content-Type: application/json
+> body raw JSON ->
+{
+  "room_id": 1,
+  "date": "2026-02-10",
+  "start_time": "09:00",
+  "end_time": "10:00"
+}
