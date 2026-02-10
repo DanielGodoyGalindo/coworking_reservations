@@ -9,10 +9,12 @@ class Reservation(models.Model):
         CANCELLED = "CANCELLED", "Cancelled"
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="reservations",
-    )
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE,
+    related_name="reservations",
+    null=True,
+    blank=True,
+)
     room = models.ForeignKey(
         "rooms.Room",
         on_delete=models.PROTECT,

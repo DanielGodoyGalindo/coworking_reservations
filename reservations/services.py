@@ -4,13 +4,12 @@ from reservations.models import Reservation
 import datetime
 
 
-@transaction.atomic
-def create_reservation(*, user, room, date, start_time, end_time):
-    # Time validation
-    if start_time >= end_time:
-        raise ValidationError("Start time must be before end time.")
+class ReservationOverlapError(Exception):
+    pass
 
-    # Overlapping (ignore CANCELLED)
+
+@transaction.atomic
+def create_reservation(*, room, date, start_time, end_time):
     overlapping_exists = Reservation.objects.filter(
         room=room,
         date=date,
@@ -18,26 +17,20 @@ def create_reservation(*, user, room, date, start_time, end_time):
             Reservation.Status.PENDING,
             Reservation.Status.CONFIRMED,
         ],
-        # existing reservations start time is less or equal than new reservation end time
-        # e.g. existing 13:00-15:00 and new 12:00h-14:00h --> 13:00 < 14:00 (overlap)
         start_time__lt=end_time,
-        # existing reservations end time is greater or equal than new reservation start time
-        # e.g. existing 9:00-11:00 and new 10:00h-12:00h --> 11:00 > 10:00 (overlap)
         end_time__gt=start_time,
     ).exists()
 
     if overlapping_exists:
-        raise ValidationError("The room is already reserved for this time slot.")
+        raise ReservationOverlapError("Time slot is not available")
 
-    # Create reservation
-    reservation = Reservation.objects.create(
-        user=user,
+    return Reservation.objects.create(
         room=room,
         date=date,
         start_time=start_time,
         end_time=end_time,
+        status=Reservation.Status.CONFIRMED,
     )
-    return reservation
 
 
 def get_available_slots(*, room, date, minimum_minutes=None):
