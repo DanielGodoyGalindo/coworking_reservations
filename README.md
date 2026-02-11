@@ -1,8 +1,16 @@
-# coworking_reservations
+<center>
+    <h1>Coworking Reservations - Django project</h1>
+</center>
 
-This is a tutorial to start a Django project.
+<center>
+    <img src="https://i0.wp.com/www.opengis.ch/wp-content/uploads/2020/04/django-python-logo.png?fit=500%2C500&ssl=1" width=200px/>
+</center>
+<br><br>
 
-First create the project:
+This is the tutorial to create my project.
+I will write every step that I do, so my future self can see how I did it :p
+
+ First create the project:
 > python -m django startproject coworking_reservations
 
 Then start the project with:
@@ -26,6 +34,8 @@ python manage.py migrate
 Create tests in /reservations/tests.py
 Use TDD (Test Driven Development) to test before writing more code
 > python manage.py test reservations
+For more info:
+> python manage.py test reservations -v 2
 
 Django Admin -> Create room for testing
 
@@ -44,3 +54,7 @@ Test with POSTMAN
   "start_time": "09:00",
   "end_time": "10:00"
 }
+
+Create new tests file: tests_api.py
+To execute the tests use:
+> python manage.py test reservations.tests_api -v 2

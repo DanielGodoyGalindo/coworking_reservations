@@ -9,7 +9,7 @@ class ReservationOverlapError(Exception):
 
 
 @transaction.atomic
-def create_reservation(*, room, date, start_time, end_time):
+def create_reservation(*, room, date, start_time, end_time, user=None):
     overlapping_exists = Reservation.objects.filter(
         room=room,
         date=date,
@@ -30,6 +30,7 @@ def create_reservation(*, room, date, start_time, end_time):
         start_time=start_time,
         end_time=end_time,
         status=Reservation.Status.CONFIRMED,
+        user=user,
     )
 
 
