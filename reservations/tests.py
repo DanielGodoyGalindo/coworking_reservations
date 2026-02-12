@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from rooms.models import Room
 from reservations.models import Reservation
 from reservations.services import create_reservation, get_available_slots
+from django.contrib.auth import get_user_model
 
 # Create your tests here.
 
@@ -15,8 +16,8 @@ User = get_user_model()
 class ReservationModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="testuser",
-            password="password123",
+            username="test",
+            password="1234",
         )
 
         self.room = Room.objects.create(
@@ -26,11 +27,11 @@ class ReservationModelTest(TestCase):
 
     def test_can_create_reservation(self):
         reservation = Reservation.objects.create(
-            user=self.user,
             room=self.room,
             date=datetime.date(2026, 1, 10),
             start_time=datetime.time(9, 0),
             end_time=datetime.time(11, 0),
+            user=get_user_model(),
         )
         self.assertEqual(reservation.user, self.user)
         self.assertEqual(reservation.room, self.room)
@@ -272,5 +273,5 @@ class AvailabilityTest(TestCase):
             [
                 (datetime.time(8, 0), datetime.time(18, 0)),
             ],
-            msg=f"got {slots}", # print message only when test fails
+            msg=f"got {slots}",  # print message only when test fails
         )

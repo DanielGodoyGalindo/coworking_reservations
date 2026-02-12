@@ -17,6 +17,10 @@ from django.views.decorators.csrf import csrf_exempt
 
 @require_GET
 def availability_view(request):
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
     room_id = request.GET.get("room_id")
     date_str = request.GET.get("date")
 
@@ -57,6 +61,10 @@ def availability_view(request):
 @csrf_exempt
 @require_POST
 def create_reservation_view(request):
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -96,6 +104,7 @@ def create_reservation_view(request):
             date=date,
             start_time=start_time,
             end_time=end_time,
+            user=request.user,
         )
     except ReservationOverlapError as e:
         return JsonResponse(
