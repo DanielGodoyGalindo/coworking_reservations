@@ -2,13 +2,14 @@
     <h1>Coworking Reservations - Django project</h1>
 </center>
 
-<center>
+<p align="center">
     <img src="https://i0.wp.com/www.opengis.ch/wp-content/uploads/2020/04/django-python-logo.png?fit=500%2C500&ssl=1" width=200px/>
-</center>
+</p>
 <br><br>
 
 This is the tutorial to create my project.
 I will write every step that I do, so my future self can see how I did it :p
+<br/>
 
  First create the project:
 > python -m django startproject coworking_reservations
@@ -58,3 +59,6 @@ Test with POSTMAN
 Create new tests file: tests_api.py
 To execute the tests use:
 > python manage.py test reservations.tests_api -v 2
+
+Add authentication check: Just check in views if request.user is authenticated.
+If not, return 401
