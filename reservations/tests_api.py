@@ -84,3 +84,20 @@ class ReservationAPITest(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+        
+    def test_unauthenticated_returns_401(self):
+        payload = {
+            "room_id": self.room.id,
+            "date": "2026-02-10",
+            "start_time": "09:00",
+            "end_time": "10:00",
+        }
+
+        # No login before POST
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 401)
