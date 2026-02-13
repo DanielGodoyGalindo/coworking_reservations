@@ -149,3 +149,58 @@ class ReservationAPITest(TestCase):
         data = response.json()
         self.assertEqual(len(data["reservations"]), 1)
         self.assertEqual(data["reservations"][0]["date"], "2026-02-10")
+
+    def test_delete_unauthenticated_returns_401(self):
+
+        # Create reservation
+        reservation = Reservation.objects.create(
+            room=self.room,
+            date=date(2026, 2, 10),
+            start_time="09:00",
+            end_time="10:00",
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+        )
+
+        # Try to delete without authentication
+        response = self.client.delete(f"/api/reservations/{reservation.id}/")
+        self.assertEqual(response.status_code, 401)
+
+    def test_delete_other_user_reservation_returns_403(self):
+
+        User = get_user_model()
+        other_user = User.objects.create_user(
+            username="other",
+            password="1234",
+        )
+
+        reservation = Reservation.objects.create(
+            room=self.room,
+            date=date(2026, 2, 10),
+            start_time="09:00",
+            end_time="10:00",
+            status=Reservation.Status.CONFIRMED,
+            user=other_user,
+        )
+
+        # Login with current user, try to delete created reservation then get 403
+        self.client.login(username="test", password="1234")
+        response = self.client.delete(f"/api/reservations/{reservation.id}/")
+        self.assertEqual(response.status_code, 403)
+        
+    def test_delete_own_reservation_success(self):
+
+        reservation = Reservation.objects.create(
+            room=self.room,
+            date=date(2026, 2, 10),
+            start_time="09:00",
+            end_time="10:00",
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+        )
+
+        # Login with user, delete created reservation, get 200
+        self.client.login(username="test", password="1234")
+        response = self.client.delete(f"/api/reservations/{reservation.id}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Reservation.objects.count(), 0)

@@ -62,3 +62,5 @@ To execute the tests use:
 
 Add authentication check: Just check in views if request.user is authenticated.
 If not, return 401
+
+Create delete endpoint in reservations/views.py, add url and create integration tests

@@ -14,6 +14,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from reservations.models import Reservation
+from django.views.decorators.http import require_http_methods
 
 
 @require_GET
@@ -156,3 +157,19 @@ def list_reservations_view(request):
     ]
 
     return JsonResponse({"reservations": data})
+
+
+@require_http_methods(["DELETE"])
+def delete_reservation_view(request, reservation_id):
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+
+    if reservation.user != request.user:
+        return JsonResponse({"error": "Delete action forbidden"}, status=403)
+
+    reservation.delete() 
+
+    return JsonResponse({"message": "Reservation deleted"}, status=200)
