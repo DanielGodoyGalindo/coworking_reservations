@@ -13,6 +13,7 @@ from datetime import date as date_type, time as time_type
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from reservations.models import Reservation
 
 
 @require_GET
@@ -123,3 +124,35 @@ def create_reservation_view(request):
         },
         status=201,
     )
+
+
+@require_GET
+def list_reservations_view(request):
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
+    # Only get reservations from authenticated user, only rooms related to user, and order by date
+    # filter ==> select reservations where user = authenticated user
+    # select_related ==> get reservations that has ForeignKey relationship
+    # order_by ==> like sql
+    reservations = (
+        Reservation.objects.filter(user=request.user)
+        .select_related("room")
+        .order_by("date", "start_time")
+    )
+
+    data = [
+        {
+            "id": r.id,
+            "room": r.room.name,
+            "room_id": r.room.id,
+            "date": r.date.isoformat(),
+            "start_time": r.start_time.strftime("%H:%M"),
+            "end_time": r.end_time.strftime("%H:%M"),
+            "status": r.status,
+        }
+        for r in reservations
+    ]
+
+    return JsonResponse({"reservations": data})

@@ -84,7 +84,7 @@ class ReservationAPITest(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        
+
     def test_unauthenticated_returns_401(self):
         payload = {
             "room_id": self.room.id,
@@ -101,3 +101,51 @@ class ReservationAPITest(TestCase):
         )
 
         self.assertEqual(response.status_code, 401)
+
+    def test_list_reservations_unauthenticated_returns_401(self):
+        response = self.client.get("/api/my-reservations/")
+        self.assertEqual(response.status_code, 401)
+
+    def test_list_reservations_authenticated_returns_200(self):
+        self.client.login(username="test", password="1234")
+        response = self.client.get("/api/my-reservations/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_list_returns_only_user_reservations(self):
+
+        from django.contrib.auth import get_user_model
+
+        # Create other user
+        User = get_user_model()
+        other_user = User.objects.create_user(
+            username="other",
+            password="1234",
+        )
+
+        # Create reservation with current user
+        Reservation.objects.create(
+            room=self.room,
+            date=date(2026, 2, 10),
+            start_time="09:00",
+            end_time="10:00",
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+        )
+
+        # Create reservation with other user
+        Reservation.objects.create(
+            room=self.room,
+            date=date(2026, 2, 11),
+            start_time="11:00",
+            end_time="12:00",
+            status=Reservation.Status.CONFIRMED,
+            user=other_user,
+        )
+
+        self.client.login(username="test", password="1234")
+        response = self.client.get("/api/my-reservations/")
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data["reservations"]), 1)
+        self.assertEqual(data["reservations"][0]["date"], "2026-02-10")
