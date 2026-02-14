@@ -170,6 +170,17 @@ def delete_reservation_view(request, reservation_id):
     if reservation.user != request.user:
         return JsonResponse({"error": "Delete action forbidden"}, status=403)
 
-    reservation.delete() 
+    if reservation.status == Reservation.Status.CANCELLED:
+        return JsonResponse({"error": "Reservation already cancelled"}, status=400)
+
+    if reservation.date < date_type.today:
+        return JsonResponse({"error": "Cannot cancel past reservations"}, status=400)
+
+    # hard delete
+    # reservation.delete()
+
+    # soft delete
+    reservation.status = Reservation.Status.CANCELLED
+    reservation.save()
 
     return JsonResponse({"message": "Reservation deleted"}, status=200)

@@ -26,7 +26,7 @@ class Reservation(models.Model):
     end_time = models.TimeField()
 
     status = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=Status.choices,
         default=Status.PENDING,
     )

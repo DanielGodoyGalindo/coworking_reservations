@@ -199,8 +199,10 @@ class ReservationAPITest(TestCase):
             user=self.user,
         )
 
-        # Login with user, delete created reservation, get 200
+        # Login with user, (soft) delete created reservation, get 200
         self.client.login(username="test", password="1234")
         response = self.client.delete(f"/api/reservations/{reservation.id}/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(Reservation.objects.count(), 0)
+        reservation.refresh_from_db()
+        self.assertEqual(reservation.status, Reservation.Status.CANCELLED)
+        self.assertEqual(Reservation.objects.count(), 1)

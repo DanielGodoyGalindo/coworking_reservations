@@ -42,7 +42,6 @@ def get_available_slots(*, room, date, minimum_minutes=None):
         room=room,
         date=date,
         status__in=[
-            Reservation.Status.PENDING,
             Reservation.Status.CONFIRMED,
         ],
     ).order_by("start_time")
