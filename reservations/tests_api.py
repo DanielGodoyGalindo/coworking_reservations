@@ -1,9 +1,11 @@
 import json
-from datetime import date
+from datetime import date, time, timedelta
 from django.test import TestCase
+from reservations.services import get_available_slots
 from rooms.models import Room
 from reservations.models import Reservation
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -19,6 +21,7 @@ class ReservationAPITest(TestCase):
             username="test",
             password="1234",
         )
+        self.date = date(2026, 2, 10)
 
     def test_create_reservation_success(self):
         payload = {
@@ -187,7 +190,7 @@ class ReservationAPITest(TestCase):
         self.client.login(username="test", password="1234")
         response = self.client.delete(f"/api/reservations/{reservation.id}/")
         self.assertEqual(response.status_code, 403)
-        
+
     def test_delete_own_reservation_success(self):
 
         reservation = Reservation.objects.create(
@@ -206,3 +209,23 @@ class ReservationAPITest(TestCase):
         reservation.refresh_from_db()
         self.assertEqual(reservation.status, Reservation.Status.CANCELLED)
         self.assertEqual(Reservation.objects.count(), 1)
+
+    def test_expired_pending_does_not_block_slot(self):
+        Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time="09:00",
+            end_time="10:00",
+            status=Reservation.Status.PENDING,
+            expires_at=timezone.now() - timedelta(minutes=1),
+        )
+
+        slots = get_available_slots(
+            room=self.room,
+            date=self.date,
+        )
+
+        self.assertIn(
+            (time(9, 0), time(10, 0)),
+            slots,
+        )

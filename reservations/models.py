@@ -14,7 +14,7 @@ class Reservation(models.Model):
     related_name="reservations",
     null=True,
     blank=True,
-)
+    )
     room = models.ForeignKey(
         "rooms.Room",
         on_delete=models.PROTECT,
@@ -32,6 +32,11 @@ class Reservation(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         indexes = [

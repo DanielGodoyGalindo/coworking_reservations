@@ -1,7 +1,10 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from reservations import models
 from reservations.models import Reservation
+from django.utils import timezone
 import datetime
+from django.db.models import Q
 
 
 class ReservationOverlapError(Exception):
@@ -29,22 +32,32 @@ def create_reservation(*, room, date, start_time, end_time, user=None):
         date=date,
         start_time=start_time,
         end_time=end_time,
-        status=Reservation.Status.CONFIRMED,
+        status=Reservation.Status.PENDING,
         user=user,
+        expires_at=timezone.now()
+        + datetime.timedelta(minutes=10),  # status pending and 10 minutes to expire
     )
 
 
 def get_available_slots(*, room, date, minimum_minutes=None):
     OPEN_TIME = datetime.time(8, 0)
     CLOSE_TIME = datetime.time(18, 0)
+    now = timezone.now()
 
-    reservations = Reservation.objects.filter(
-        room=room,
-        date=date,
-        status__in=[
-            Reservation.Status.CONFIRMED,
-        ],
-    ).order_by("start_time")
+    reservations = (
+        Reservation.objects.filter(
+            room=room,
+            date=date,
+        )
+        .filter(
+            Q(status=Reservation.Status.CONFIRMED)
+            | Q(
+                status=Reservation.Status.PENDING,
+                expires_at__gt=now,
+            )
+        )
+        .order_by("start_time")
+    )
 
     available_slots = []
     current_start = OPEN_TIME
@@ -70,3 +83,16 @@ def get_available_slots(*, room, date, minimum_minutes=None):
             available_slots.append((current_start, CLOSE_TIME))
 
     return available_slots
+
+
+def confirm_reservation(reservation):
+    reservation.status = Reservation.Status.CONFIRMED
+    reservation.expires_at = None
+    reservation.save()
+
+
+def expire_pending_reservations():
+    Reservation.objects.filter(
+        status=Reservation.Status.PENDING,
+        expires_at__lte=timezone.now(),
+    ).update(status=Reservation.Status.CANCELLED)
