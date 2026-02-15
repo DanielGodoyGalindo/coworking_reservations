@@ -4,6 +4,7 @@ from reservations import models
 from reservations.models import Reservation
 from django.utils import timezone
 import datetime
+from datetime import timedelta
 from django.db.models import Q
 
 
@@ -39,9 +40,11 @@ def create_reservation(*, room, date, start_time, end_time, user=None):
     )
 
 
-def get_available_slots(*, room, date, minimum_minutes=None):
+def get_available_slots(*, room, date, slot_minutes=30):
+
     OPEN_TIME = datetime.time(8, 0)
     CLOSE_TIME = datetime.time(18, 0)
+
     now = timezone.now()
 
     reservations = (
@@ -59,30 +62,35 @@ def get_available_slots(*, room, date, minimum_minutes=None):
         .order_by("start_time")
     )
 
-    available_slots = []
+    # Calculate big ranges
+    free_ranges = []
     current_start = OPEN_TIME
-
-    def slot_is_long_enough(start, end):
-        if minimum_minutes is None:
-            return True
-
-        start_dt = datetime.datetime.combine(date, start)
-        end_dt = datetime.datetime.combine(date, end)
-
-        duration = (end_dt - start_dt).total_seconds() / 60
-        return duration >= minimum_minutes
 
     for reservation in reservations:
         if reservation.start_time > current_start:
-            if slot_is_long_enough(current_start, reservation.start_time):
-                available_slots.append((current_start, reservation.start_time))
+            free_ranges.append((current_start, reservation.start_time))
         current_start = max(current_start, reservation.end_time)
 
     if current_start < CLOSE_TIME:
-        if slot_is_long_enough(current_start, CLOSE_TIME):
-            available_slots.append((current_start, CLOSE_TIME))
+        free_ranges.append((current_start, CLOSE_TIME))
 
-    return available_slots
+    # Divide in slots
+    slots = []
+    for start, end in free_ranges:
+        start_dt = datetime.datetime.combine(date, start)
+        end_dt = datetime.datetime.combine(date, end)
+
+        while start_dt + timedelta(minutes=slot_minutes) <= end_dt:
+            slot_end = start_dt + timedelta(minutes=slot_minutes)
+            slots.append(
+                (
+                    start_dt.time(),
+                    slot_end.time(),
+                )
+            )
+            start_dt = slot_end
+
+    return slots
 
 
 def confirm_reservation(reservation):
