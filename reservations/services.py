@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.http import JsonResponse
 from reservations import models
 from reservations.models import Reservation
 from django.utils import timezone
@@ -13,7 +14,10 @@ class ReservationOverlapError(Exception):
 
 
 @transaction.atomic
-def create_reservation(*, room, date, start_time, end_time, user=None):
+def create_reservation(*, room, date, start_time, end_time, user):
+
+    validate_duration(date, start_time, end_time)
+
     overlapping_exists = Reservation.objects.filter(
         room=room,
         date=date,
@@ -35,12 +39,11 @@ def create_reservation(*, room, date, start_time, end_time, user=None):
         end_time=end_time,
         status=Reservation.Status.PENDING,
         user=user,
-        expires_at=timezone.now()
-        + datetime.timedelta(minutes=10),  # status pending and 10 minutes to expire
+        expires_at=timezone.now() + timedelta(minutes=10),
     )
 
 
-def get_available_slots(*, room, date, slot_minutes=30):
+def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
 
     OPEN_TIME = datetime.time(8, 0)
     CLOSE_TIME = datetime.time(18, 0)
@@ -76,19 +79,25 @@ def get_available_slots(*, room, date, slot_minutes=30):
 
     # Divide in slots
     slots = []
+
     for start, end in free_ranges:
         start_dt = datetime.datetime.combine(date, start)
         end_dt = datetime.datetime.combine(date, end)
 
         while start_dt + timedelta(minutes=slot_minutes) <= end_dt:
-            slot_end = start_dt + timedelta(minutes=slot_minutes)
-            slots.append(
-                (
-                    start_dt.time(),
-                    slot_end.time(),
+            total_available = (end_dt - start_dt).total_seconds() / 60
+
+            if total_available >= minimum_minutes:
+                slot_end = start_dt + timedelta(minutes=slot_minutes)
+
+                slots.append(
+                    (
+                        start_dt.time(),
+                        slot_end.time(),
+                    )
                 )
-            )
-            start_dt = slot_end
+
+            start_dt += timedelta(minutes=slot_minutes)
 
     return slots
 
@@ -104,3 +113,17 @@ def expire_pending_reservations():
         status=Reservation.Status.PENDING,
         expires_at__lte=timezone.now(),
     ).update(status=Reservation.Status.CANCELLED)
+
+
+def validate_duration(date, start_time, end_time):
+
+    start_dt = datetime.datetime.combine(date, start_time)
+    end_dt = datetime.datetime.combine(date, end_time)
+
+    duration_minutes = (end_dt - start_dt).total_seconds() / 60
+
+    if duration_minutes < 60:
+        raise ValueError("Minimum reservation is 60 minutes")
+
+    if duration_minutes % 30 != 0:
+        raise ValueError("Reservation must be in 30-minute increments")

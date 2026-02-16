@@ -1,7 +1,7 @@
 import json
 from datetime import date, time, timedelta
 from django.test import TestCase
-from reservations.services import get_available_slots
+from reservations.services import get_available_slots, create_reservation
 from rooms.models import Room
 from reservations.models import Reservation
 from django.contrib.auth import get_user_model
@@ -21,7 +21,7 @@ class ReservationAPITest(TestCase):
             username="test",
             password="1234",
         )
-        self.date = date(2026, 2, 10)
+        self.date = timezone.localdate() + timedelta(days=1)
 
     def test_create_reservation_success(self):
         payload = {
@@ -192,12 +192,15 @@ class ReservationAPITest(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_delete_own_reservation_success(self):
+        
+        start_time = time(9, 0)
+        end_time = time(10, 00)
 
         reservation = Reservation.objects.create(
             room=self.room,
-            date=date(2026, 2, 10),
-            start_time="09:00",
-            end_time="10:00",
+            date=self.date,
+            start_time=start_time,
+            end_time=end_time,
             status=Reservation.Status.CONFIRMED,
             user=self.user,
         )
@@ -226,6 +229,28 @@ class ReservationAPITest(TestCase):
         )
 
         self.assertIn(
-            (time(9, 0), time(10, 0)),
+            (time(9, 0), time(9, 30)),
             slots,
         )
+
+        self.assertIn(
+            (time(9, 30), time(10, 0)),
+            slots,
+        )
+
+    def test_create_30minutes_reservation(self):
+        self.client.login(username="test", password="1234")
+
+        start_time = time(12, 0)
+        end_time = time(12, 30)
+
+        with self.assertRaises(ValueError) as context:
+            create_reservation(
+                room=self.room,
+                date=self.date,
+                start_time=start_time,
+                end_time=end_time,
+                user=self.user,
+            )
+
+        self.assertIn("Minimum reservation is 60 minutes", str(context.exception))
