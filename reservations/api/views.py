@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404
 from datetime import date as date_type
 from rooms.models import Room
 from reservations.services import (
+    ReservationConfirmationError,
+    confirm_reservation,
     get_available_slots,
     create_reservation,
     ReservationOverlapError,
@@ -15,6 +17,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from reservations.models import Reservation
 from django.views.decorators.http import require_http_methods
+from django.core.exceptions import PermissionDenied
 
 
 @require_GET
@@ -184,3 +187,31 @@ def delete_reservation_view(request, reservation_id):
     reservation.save()
 
     return JsonResponse({"message": "Reservation deleted"}, status=200)
+
+
+def confirm_reservation_view(request, reservation_id):
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+
+    try:
+        reservation = confirm_reservation(
+            reservation=reservation,
+            user=request.user,
+        )
+
+    except PermissionDenied as e:
+        return JsonResponse({"error": str(e)}, status=403)
+
+    except ReservationConfirmationError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse(
+        {
+            "id": reservation.id,
+            "status": reservation.status,
+        },
+        status=200,
+    )

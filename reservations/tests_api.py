@@ -192,7 +192,7 @@ class ReservationAPITest(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_delete_own_reservation_success(self):
-        
+
         start_time = time(9, 0)
         end_time = time(10, 00)
 
@@ -254,3 +254,23 @@ class ReservationAPITest(TestCase):
             )
 
         self.assertIn("Minimum reservation is 60 minutes", str(context.exception))
+
+    def test_confirm_own_pending_reservation_success(self):
+
+        reservation = Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.PENDING,
+            user=self.user,
+            expires_at=timezone.now() + timedelta(minutes=10),
+        )
+
+        self.client.login(username="test", password="1234")
+        response = self.client.post(f"/api/reservations/{reservation.id}/confirm/")
+        self.assertEqual(response.status_code, 200)
+
+        reservation.refresh_from_db()
+        self.assertEqual(reservation.status, Reservation.Status.CONFIRMED)
+        self.assertIsNone(reservation.expires_at)

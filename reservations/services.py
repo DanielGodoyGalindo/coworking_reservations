@@ -7,9 +7,14 @@ from django.utils import timezone
 import datetime
 from datetime import timedelta
 from django.db.models import Q
+from django.core.exceptions import PermissionDenied
 
 
 class ReservationOverlapError(Exception):
+    pass
+
+
+class ReservationConfirmationError(Exception):
     pass
 
 
@@ -102,12 +107,6 @@ def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
     return slots
 
 
-def confirm_reservation(reservation):
-    reservation.status = Reservation.Status.CONFIRMED
-    reservation.expires_at = None
-    reservation.save()
-
-
 def expire_pending_reservations():
     Reservation.objects.filter(
         status=Reservation.Status.PENDING,
@@ -127,3 +126,23 @@ def validate_duration(date, start_time, end_time):
 
     if duration_minutes % 30 != 0:
         raise ValueError("Reservation must be in 30-minute increments")
+
+
+def confirm_reservation(*, reservation, user):
+
+    if reservation.user != user:
+        raise PermissionDenied("You cannot confirm this reservation")
+
+    if reservation.status != Reservation.Status.PENDING:
+        raise ReservationConfirmationError("Only pending reservations can be confirmed")
+
+    if reservation.expires_at and reservation.expires_at <= timezone.now():
+        reservation.status = Reservation.Status.CANCELLED
+        reservation.save()
+        raise ReservationConfirmationError("Reservation has expired")
+
+    reservation.status = Reservation.Status.CONFIRMED
+    reservation.expires_at = None
+    reservation.save()
+
+    return reservation
