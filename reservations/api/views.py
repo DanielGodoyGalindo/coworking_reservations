@@ -4,20 +4,20 @@ from django.shortcuts import get_object_or_404
 from datetime import date as date_type
 from rooms.models import Room
 from reservations.services import (
-    ReservationConfirmationError,
     confirm_reservation,
     get_available_slots,
     create_reservation,
     ReservationOverlapError,
+    ReservationConfirmationError,
 )
 import json
 from datetime import date as date_type, time as time_type
-from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from reservations.models import Reservation
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
 
 
 @require_GET
@@ -30,18 +30,12 @@ def availability_view(request):
     date_str = request.GET.get("date")
 
     if not room_id or not date_str:
-        return JsonResponse(
-            {"error": "room_id and date are required"},
-            status=400,
-        )
+        error_response("room_id and date are required", 400)
 
     try:
         date = date_type.fromisoformat(date_str)
     except ValueError:
-        return JsonResponse(
-            {"error": "Invalid date format (YYYY-MM-DD)"},
-            status=400,
-        )
+        error_response("Invalid date format (YYYY-MM-DD)", 400)
 
     room = get_object_or_404(Room, id=room_id)
 
@@ -68,38 +62,26 @@ def availability_view(request):
 def create_reservation_view(request):
 
     if not request.user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=401)
+        error_response("Authentication required", 401)
 
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return JsonResponse(
-            {"error": "Invalid JSON"},
-            status=400,
-        )
+        error_response("Invalid JSON", 400)
 
     required_fields = {"room_id", "date", "start_time", "end_time"}
     if not required_fields.issubset(data):
-        return JsonResponse(
-            {"error": "Missing required fields"},
-            status=400,
-        )
+        error_response("Missing required fields", 400)
 
     try:
         date = date_type.fromisoformat(data["date"])
         start_time = time_type.fromisoformat(data["start_time"])
         end_time = time_type.fromisoformat(data["end_time"])
     except ValueError:
-        return JsonResponse(
-            {"error": "Invalid date or time format"},
-            status=400,
-        )
+        error_response("Invalid date or time format", 400)
 
     if start_time >= end_time:
-        return JsonResponse(
-            {"error": "start_time must be before end_time"},
-            status=400,
-        )
+        error_response("start_time must be before end_time", 400)
 
     room = get_object_or_404(Room, id=data["room_id"])
 
@@ -112,10 +94,7 @@ def create_reservation_view(request):
             user=request.user,
         )
     except ReservationOverlapError as e:
-        return JsonResponse(
-            {"error": str(e)},
-            status=409,
-        )
+        error_response(str(e), 409)
 
     return JsonResponse(
         {
@@ -134,7 +113,7 @@ def create_reservation_view(request):
 def list_reservations_view(request):
 
     if not request.user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=401)
+        error_response("Authentication required", 401)
 
     # Only get reservations from authenticated user, only rooms related to user, and order by date
     # filter ==> select reservations where user = authenticated user
@@ -166,18 +145,18 @@ def list_reservations_view(request):
 def delete_reservation_view(request, reservation_id):
 
     if not request.user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=401)
+        error_response("Authentication required", 401)
 
     reservation = get_object_or_404(Reservation, id=reservation_id)
 
     if reservation.user != request.user:
-        return JsonResponse({"error": "Delete action forbidden"}, status=403)
+        error_response("Delete action forbidden", 403)
 
     if reservation.status == Reservation.Status.CANCELLED:
-        return JsonResponse({"error": "Reservation already cancelled"}, status=400)
+        error_response("Reservation already cancelled", 400)
 
     if reservation.date < date_type.today():
-        return JsonResponse({"error": "Cannot cancel past reservations"}, status=400)
+        error_response("Cannot cancel past reservations", 400)
 
     # hard delete
     # reservation.delete()
@@ -192,7 +171,7 @@ def delete_reservation_view(request, reservation_id):
 def confirm_reservation_view(request, reservation_id):
 
     if not request.user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=401)
+        error_response("Authentication required", 401)
 
     reservation = get_object_or_404(Reservation, id=reservation_id)
 
@@ -203,10 +182,10 @@ def confirm_reservation_view(request, reservation_id):
         )
 
     except PermissionDenied as e:
-        return JsonResponse({"error": str(e)}, status=403)
+        error_response(str(e), 403)
 
     except ReservationConfirmationError as e:
-        return JsonResponse({"error": str(e)}, status=400)
+        error_response(str(e), 400)
 
     return JsonResponse(
         {
@@ -215,3 +194,7 @@ def confirm_reservation_view(request, reservation_id):
         },
         status=200,
     )
+
+
+def error_response(message, status_code):
+    return JsonResponse({"error": message}, status=status_code)

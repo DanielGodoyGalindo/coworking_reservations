@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import JsonResponse
 from reservations import models
@@ -8,6 +7,7 @@ import datetime
 from datetime import timedelta
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
+# PermissionDenied throws 403
 
 
 class ReservationOverlapError(Exception):
