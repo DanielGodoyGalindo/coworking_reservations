@@ -136,6 +136,7 @@ def confirm_reservation(*, reservation, user):
     if reservation.status != Reservation.Status.PENDING:
         raise ReservationConfirmationError("Only pending reservations can be confirmed")
 
+    # change status to cancelled if is expired
     if reservation.expires_at and reservation.expires_at <= timezone.now():
         reservation.status = Reservation.Status.CANCELLED
         reservation.save()

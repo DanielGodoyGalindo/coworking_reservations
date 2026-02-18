@@ -274,3 +274,72 @@ class ReservationAPITest(TestCase):
         reservation.refresh_from_db()
         self.assertEqual(reservation.status, Reservation.Status.CONFIRMED)
         self.assertIsNone(reservation.expires_at)
+
+    def test_confirm_other_user_reservation_returns_403(self):
+
+        User = get_user_model()
+
+        reservation_user = User.objects.create_user(
+            username="user",
+            password="1234",
+        )
+
+        other_user = User.objects.create_user(
+            username="other",
+            password="1234",
+        )
+
+        reservation = Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.PENDING,
+            user=reservation_user,
+            expires_at=timezone.now() + timedelta(minutes=10),
+        )
+
+        self.client.login(username="other", password="1234")
+        response = self.client.post(f"/api/reservations/{reservation.id}/confirm/")
+        self.assertEqual(response.status_code, 403)
+
+    def test_confirm_expired_reservation_returns_400(self):
+
+        expired_reservation = Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.PENDING,
+            user=self.user,
+            expires_at=timezone.now() - timedelta(minutes=10),
+        )
+
+        self.client.login(username="test", password="1234")
+        response = self.client.post(
+            f"/api/reservations/{expired_reservation.id}/confirm/"
+        )
+        self.assertEqual(response.status_code, 400)
+        expired_reservation.refresh_from_db()
+        self.assertEqual(expired_reservation.status, Reservation.Status.CANCELLED)
+        self.assertIn("expired", response.json()["error"])
+
+    def test_confirm_already_confirmed_returns_400(self):
+
+        confirmed_reservation = Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+            expires_at=None,
+        )
+
+        self.client.login(username="test", password="1234")
+        response = self.client.post(
+            f"/api/reservations/{confirmed_reservation.id}/confirm/"
+        )
+        self.assertEqual(response.status_code, 400)
+        confirmed_reservation.refresh_from_db()
+        self.assertEqual(confirmed_reservation.status, Reservation.Status.CONFIRMED)
