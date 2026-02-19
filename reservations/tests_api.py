@@ -73,6 +73,98 @@ class ReservationAPITest(TestCase):
         self.assertEqual(response.status_code, 409)
         self.assertEqual(Reservation.objects.count(), 1)
 
+    def test_no_overlap_when_touching_end(self):
+
+        Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+        )
+
+        overlapping = Reservation.objects.filter(
+            room=self.room,
+            date=self.date,
+            status__in=[Reservation.Status.PENDING, Reservation.Status.CONFIRMED],
+            start_time__lt=time(11, 0),
+            end_time__gt=time(10, 0),
+        ).exists()
+
+        self.assertFalse(overlapping)
+
+    def test_overlap_partial_at_start(self):
+
+        Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+        )
+
+        overlapping = Reservation.objects.filter(
+            room=self.room,
+            date=self.date,
+            status__in=[Reservation.Status.PENDING, Reservation.Status.CONFIRMED],
+            start_time__lt=time(10, 30),
+            end_time__gt=time(9, 30),
+        ).exists()
+
+        self.assertTrue(overlapping)
+
+    def test_overlap_partial_at_end(self):
+
+        # Existing reservation
+        Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+        )
+
+        self.client.login(username="test", password="1234")
+
+        payload = {
+            "room_id": self.room.id,
+            "date": str(self.date),
+            "start_time": "09:30",
+            "end_time": "10:30",
+        }
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_cancelled_reservation_does_not_block(self):
+
+        Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.CANCELLED,
+            user=self.user,
+        )
+
+        overlapping = Reservation.objects.filter(
+            room=self.room,
+            date=self.date,
+            status__in=[Reservation.Status.PENDING, Reservation.Status.CONFIRMED],
+            start_time__lt=time(10, 30),
+            end_time__gt=time(9, 30),
+        ).exists()
+
+        self.assertFalse(overlapping)
+
     def test_missing_fields_returns_400(self):
         payload = {
             "room_id": self.room.id,
@@ -87,6 +179,64 @@ class ReservationAPITest(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+        
+    def test_overlap_full_containment(self):
+
+        Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+        )
+
+        self.client.login(username="test", password="1234")
+
+        payload = {
+            "room_id": self.room.id,
+            "date": str(self.date),
+            "start_time": "08:00",
+            "end_time": "11:00",
+        }
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("booked", response.json()["error"])
+        
+    def test_overlap_exact_same_time(self):
+
+        Reservation.objects.create(
+            room=self.room,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.CONFIRMED,
+            user=self.user,
+        )
+
+        self.client.login(username="test", password="1234")
+
+        payload = {
+            "room_id": self.room.id,
+            "date": str(self.date),
+            "start_time": "09:00",
+            "end_time": "10:00",
+        }
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("booked", response.json()["error"])
 
     def test_unauthenticated_returns_401(self):
         payload = {

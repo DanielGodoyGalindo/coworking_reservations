@@ -18,24 +18,17 @@ class ReservationConfirmationError(Exception):
     pass
 
 
+class ReservationCreationError(Exception):
+    pass
+
+
 @transaction.atomic
 def create_reservation(*, room, date, start_time, end_time, user):
 
     validate_duration(date, start_time, end_time)
 
-    overlapping_exists = Reservation.objects.filter(
-        room=room,
-        date=date,
-        status__in=[
-            Reservation.Status.PENDING,
-            Reservation.Status.CONFIRMED,
-        ],
-        start_time__lt=end_time,
-        end_time__gt=start_time,
-    ).exists()
-
-    if overlapping_exists:
-        raise ReservationOverlapError("Time slot is not available")
+    if Reservation.overlapping_exists(room, date, start_time, end_time):
+        raise ReservationCreationError("Time slot already booked")
 
     return Reservation.objects.create(
         room=room,

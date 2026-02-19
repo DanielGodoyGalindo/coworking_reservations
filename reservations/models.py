@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 
+
 # Create your models here.
 class Reservation(models.Model):
     class Status(models.TextChoices):
@@ -9,11 +10,11 @@ class Reservation(models.Model):
         CANCELLED = "CANCELLED", "Cancelled"
 
     user = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete=models.CASCADE,
-    related_name="reservations",
-    null=True,
-    blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="reservations",
+        null=True,
+        blank=True,
     )
     room = models.ForeignKey(
         "rooms.Room",
@@ -32,11 +33,24 @@ class Reservation(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     expires_at = models.DateTimeField(
         null=True,
         blank=True,
     )
+
+    @staticmethod
+    def overlapping_exists(room, date, start_time, end_time):
+        return Reservation.objects.filter(
+            room=room,
+            date=date,
+            status__in=[
+                Reservation.Status.PENDING,
+                Reservation.Status.CONFIRMED,
+            ],
+            start_time__lt=end_time,
+            end_time__gt=start_time,
+        ).exists()
 
     class Meta:
         indexes = [
