@@ -6,7 +6,10 @@ from django.utils import timezone
 import datetime
 from datetime import timedelta
 from django.db.models import Q
+from django.db import transaction
 from django.core.exceptions import PermissionDenied
+
+from rooms.models import Room
 # PermissionDenied throws 403
 
 
@@ -18,17 +21,15 @@ class ReservationConfirmationError(Exception):
     pass
 
 
-class ReservationCreationError(Exception):
-    pass
-
-
 @transaction.atomic
 def create_reservation(*, room, date, start_time, end_time, user):
+
+    room = Room.objects.select_for_update().get(pk=room.pk)
 
     validate_duration(date, start_time, end_time)
 
     if Reservation.overlapping_exists(room, date, start_time, end_time):
-        raise ReservationCreationError("Time slot already booked")
+        raise ReservationOverlapError("Time slot already booked")
 
     return Reservation.objects.create(
         room=room,

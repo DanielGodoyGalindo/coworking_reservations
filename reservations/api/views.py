@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404
 from datetime import date as date_type
 from rooms.models import Room
 from reservations.services import (
-    ReservationCreationError,
     confirm_reservation,
     get_available_slots,
     create_reservation,
@@ -97,8 +96,8 @@ def create_reservation_view(request):
     except ReservationOverlapError as e:
         return error_response(str(e), 409)
 
-    except ReservationCreationError as e:
-        return error_response(str(e), 409)
+    except ValueError as e:
+        return error_response(str(e), 400)
 
     return JsonResponse(
         {
