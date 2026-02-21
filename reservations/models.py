@@ -44,19 +44,22 @@ class Reservation(models.Model):
         return Reservation.objects.filter(
             room=room,
             date=date,
-            status__in=[
-                Reservation.Status.PENDING,
-                Reservation.Status.CONFIRMED,
-            ],
+            status__in=ACTIVE_STATUSES,
             start_time__lt=end_time,
             end_time__gt=start_time,
         ).exists()
 
     class Meta:
         indexes = [
-            models.Index(fields=["room", "date"]),
+            models.Index(fields=["room", "date", "start_time", "end_time"]),
         ]
         ordering = ["date", "start_time"]
 
     def __str__(self):
         return f"{self.room} | {self.date} {self.start_time}-{self.end_time}"
+
+
+ACTIVE_STATUSES = [
+    Reservation.Status.PENDING,
+    Reservation.Status.CONFIRMED,
+]
