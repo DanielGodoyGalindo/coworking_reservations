@@ -1,13 +1,16 @@
+import calendar
+
 from django.db import transaction
 from django.http import JsonResponse
 from reservations import models
 from reservations.models import Reservation
 from django.utils import timezone
 import datetime
-from datetime import timedelta
+from datetime import date, timedelta, time
 from django.db.models import Q
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
+from django.db.models import F, ExpressionWrapper, DurationField, Sum
 
 from rooms.models import Room
 # PermissionDenied throws 403
@@ -24,7 +27,7 @@ class ReservationConfirmationError(Exception):
 @transaction.atomic
 def create_reservation(*, room, date, start_time, end_time, user):
 
-    room = Room.objects.select_for_update().get(pk=room.pk)
+    (Reservation.objects.select_for_update().filter(room=room, date=date))
 
     validate_duration(date, start_time, end_time)
 
@@ -141,3 +144,80 @@ def confirm_reservation(*, reservation, user):
     reservation.save()
 
     return reservation
+
+
+def occupancy_rate(room, date):
+
+    opening = time(8, 0)
+    closing = time(18, 0)
+
+    total_available_seconds = (
+        datetime.combine(date, closing) - datetime.combine(date, opening)
+    ).total_seconds()
+
+    reservations = Reservation.objects.filter(
+        room=room,
+        date=date,
+        status=Reservation.Status.CONFIRMED,
+    )
+
+    occupied_seconds = 0
+
+    for r in reservations:
+        delta = (
+            datetime.combine(date, r.end_time) - datetime.combine(date, r.start_time)
+        ).total_seconds()
+        occupied_seconds += delta
+
+    if total_available_seconds == 0:
+        return 0
+
+    return occupied_seconds / total_available_seconds
+
+
+def monthly_occupancy_rate(room, year, month):
+
+    opening = time(8, 0)
+    closing = time(18, 0)
+
+    start_date = date(year, month, 1)
+    last_day = calendar.monthrange(year, month)[1]
+    end_date = date(year, month, last_day)
+
+    current = start_date
+    working_days = 0
+
+    while current <= end_date:
+        if current.weekday() < 5:
+            working_days += 1
+        current += timedelta(days=1)
+
+    daily_seconds = (
+        datetime.combine(start_date, closing) - datetime.combine(start_date, opening)
+    ).total_seconds()
+
+    total_available_seconds = working_days * daily_seconds
+
+    reservations = (
+        Reservation.objects.filter(
+            room=room,
+            date__range=(start_date, end_date),
+            status=Reservation.Status.CONFIRMED,
+        )
+        .annotate(
+            duration=ExpressionWrapper(
+                F("end_time") - F("start_time"),
+                output_field=DurationField(),
+            )
+        )
+        .aggregate(total=Sum("duration"))
+    )
+
+    occupied_seconds = (
+        reservations["total"].total_seconds() if reservations["total"] else 0
+    )
+
+    if total_available_seconds == 0:
+        return 0
+
+    return occupied_seconds / total_available_seconds
