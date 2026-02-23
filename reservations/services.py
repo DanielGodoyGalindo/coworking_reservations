@@ -1,7 +1,7 @@
 import calendar
-
 from django.db import transaction
 from django.http import JsonResponse
+from coworking_reservations import settings
 from reservations import models
 from reservations.models import Reservation
 from django.utils import timezone
@@ -46,9 +46,9 @@ def create_reservation(*, room, date, start_time, end_time, user):
 
 
 def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
-
-    OPEN_TIME = datetime.time(8, 0)
-    CLOSE_TIME = datetime.time(18, 0)
+    
+    OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
+    CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
 
     now = timezone.now()
 
@@ -69,15 +69,15 @@ def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
 
     # Calculate big ranges
     free_ranges = []
-    current_start = OPEN_TIME
+    current_start = OPENING_HOUR
 
     for reservation in reservations:
         if reservation.start_time > current_start:
             free_ranges.append((current_start, reservation.start_time))
         current_start = max(current_start, reservation.end_time)
 
-    if current_start < CLOSE_TIME:
-        free_ranges.append((current_start, CLOSE_TIME))
+    if current_start < CLOSING_HOUR:
+        free_ranges.append((current_start, CLOSING_HOUR))
 
     # Divide in slots
     slots = []
@@ -146,13 +146,18 @@ def confirm_reservation(*, reservation, user):
     return reservation
 
 
-def occupancy_rate(room, date):
+###################
+# Occupancy rates #
+###################
 
-    opening = time(8, 0)
-    closing = time(18, 0)
+
+def occupancy_rate(room, date):
+    
+    OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
+    CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
 
     total_available_seconds = (
-        datetime.combine(date, closing) - datetime.combine(date, opening)
+        datetime.combine(date, CLOSING_HOUR) - datetime.combine(date, OPENING_HOUR)
     ).total_seconds()
 
     reservations = Reservation.objects.filter(
@@ -176,9 +181,9 @@ def occupancy_rate(room, date):
 
 
 def monthly_occupancy_rate(room, year, month):
-
-    opening = time(8, 0)
-    closing = time(18, 0)
+    
+    OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
+    CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
 
     start_date = date(year, month, 1)
     last_day = calendar.monthrange(year, month)[1]
@@ -193,7 +198,7 @@ def monthly_occupancy_rate(room, year, month):
         current += timedelta(days=1)
 
     daily_seconds = (
-        datetime.combine(start_date, closing) - datetime.combine(start_date, opening)
+        datetime.combine(start_date, CLOSING_HOUR) - datetime.combine(start_date, OPENING_HOUR)
     ).total_seconds()
 
     total_available_seconds = working_days * daily_seconds
@@ -221,3 +226,102 @@ def monthly_occupancy_rate(room, year, month):
         return 0
 
     return occupied_seconds / total_available_seconds
+
+
+def global_monthly_occupancy(year, month):
+
+    OPENING_HOUR = settings.COWORKING_OPENING_HOUR
+    CLOSING_HOUR = settings.COWORKING_CLOSING_HOUR
+
+    start_date = date(year, month, 1)
+    last_day = calendar.monthrange(year, month)[1]
+    end_date = date(year, month, last_day)
+
+    total_rooms = Room.objects.count()
+
+    daily_seconds = (
+        datetime.combine(start_date, time(CLOSING_HOUR))
+        - datetime.combine(start_date, time(OPENING_HOUR))
+    ).total_seconds()
+
+    total_days = (end_date - start_date).days + 1
+    total_available_seconds = total_days * daily_seconds * total_rooms
+
+    reservations = (
+        Reservation.objects.filter(
+            date__range=(start_date, end_date),
+            status=Reservation.Status.CONFIRMED,
+        )
+        .annotate(
+            duration=ExpressionWrapper(
+                F("end_time") - F("start_time"),
+                output_field=DurationField(),
+            )
+        )
+        .aggregate(total=Sum("duration"))
+    )
+
+    occupied_seconds = (
+        reservations["total"].total_seconds() if reservations["total"] else 0
+    )
+
+    if total_available_seconds == 0:
+        return 0
+
+    return occupied_seconds / total_available_seconds
+
+
+def rooms_monthly_ranking(year, month):
+
+    OPENING_HOUR = settings.COWORKING_OPENING_HOUR
+    CLOSING_HOUR = settings.COWORKING_CLOSING_HOUR
+
+    start_date = date(year, month, 1)
+    last_day = calendar.monthrange(year, month)[1]
+    end_date = date(year, month, last_day)
+
+    daily_seconds = (
+        datetime.combine(start_date, time(CLOSING_HOUR))
+        - datetime.combine(start_date, time(OPENING_HOUR))
+    ).total_seconds()
+
+    total_days = (end_date - start_date).days + 1
+    available_per_room = total_days * daily_seconds
+
+    rooms = Room.objects.all()
+    ranking = []
+
+    for room in rooms:
+        reservations = (
+            Reservation.objects.filter(
+                room=room,
+                date__range=(start_date, end_date),
+                status=Reservation.Status.CONFIRMED,
+            )
+            .annotate(
+                duration=ExpressionWrapper(
+                    F("end_time") - F("start_time"),
+                    output_field=DurationField(),
+                )
+            )
+            .aggregate(total=Sum("duration"))
+        )
+
+        occupied_seconds = (
+            reservations["total"].total_seconds() if reservations["total"] else 0
+        )
+
+        occupancy = (
+            occupied_seconds / available_per_room if available_per_room > 0 else 0
+        )
+
+        ranking.append(
+            {
+                "room": room,
+                "occupancy": occupancy,
+            }
+        )
+
+    ranking.sort(key=lambda x: x["occupancy"], reverse=True)
+
+    return ranking
