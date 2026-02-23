@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from reservations import models
 from reservations.models import Reservation
 from django.utils import timezone
-import datetime
+from datetime import datetime
 from datetime import date, timedelta, time
 from django.db.models import Q
 from django.db import transaction
