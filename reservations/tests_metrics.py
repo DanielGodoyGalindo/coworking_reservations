@@ -16,7 +16,7 @@ class ReservationMetricsTest(TestCase):
             name="Sala Pong",
             max_capacity=10,
         )
-        self.url = "/api/reservations/"
+        self.url = "/metrics/reservations/"
         self.user = User.objects.create_user(
             username="test",
             password="1234",
