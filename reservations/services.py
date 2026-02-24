@@ -46,7 +46,7 @@ def create_reservation(*, room, date, start_time, end_time, user):
 
 
 def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
-    
+
     OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
     CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
 
@@ -152,7 +152,7 @@ def confirm_reservation(*, reservation, user):
 
 
 def occupancy_rate(room, date):
-    
+
     OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
     CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
 
@@ -181,7 +181,7 @@ def occupancy_rate(room, date):
 
 
 def monthly_occupancy_rate(room, year, month):
-    
+
     OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
     CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
 
@@ -198,7 +198,8 @@ def monthly_occupancy_rate(room, year, month):
         current += timedelta(days=1)
 
     daily_seconds = (
-        datetime.combine(start_date, CLOSING_HOUR) - datetime.combine(start_date, OPENING_HOUR)
+        datetime.combine(start_date, CLOSING_HOUR)
+        - datetime.combine(start_date, OPENING_HOUR)
     ).total_seconds()
 
     total_available_seconds = working_days * daily_seconds
@@ -325,3 +326,20 @@ def rooms_monthly_ranking(year, month):
     ranking.sort(key=lambda x: x["occupancy"], reverse=True)
 
     return ranking
+
+
+##############
+# Automation #
+##############
+
+def expire_pending_reservations():
+    now = timezone.now()
+
+    expired = Reservation.objects.filter(
+        status=Reservation.Status.PENDING,
+        expires_at__lte=now,
+    )
+
+    count = expired.update(status=Reservation.Status.CANCELLED)
+
+    return count
