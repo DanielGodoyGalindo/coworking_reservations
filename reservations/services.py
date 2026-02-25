@@ -9,9 +9,8 @@ from datetime import datetime
 from datetime import date, timedelta, time
 from django.db.models import Q
 from django.db import transaction
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import F, ExpressionWrapper, DurationField, Sum
-
 from rooms.models import Room
 # PermissionDenied throws 403
 
@@ -27,12 +26,15 @@ class ReservationConfirmationError(Exception):
 @transaction.atomic
 def create_reservation(*, room, date, start_time, end_time, user):
 
+    if Reservation.overlapping_exists(room, date, start_time, end_time):
+        raise ReservationOverlapError("Time slot already booked")
+
+    if date < timezone.localdate():
+        raise ValueError("Cannot reserve in the past")
+
     (Reservation.objects.select_for_update().filter(room=room, date=date))
 
     validate_duration(date, start_time, end_time)
-
-    if Reservation.overlapping_exists(room, date, start_time, end_time):
-        raise ReservationOverlapError("Time slot already booked")
 
     return Reservation.objects.create(
         room=room,
@@ -104,13 +106,6 @@ def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
     return slots
 
 
-def expire_pending_reservations():
-    Reservation.objects.filter(
-        status=Reservation.Status.PENDING,
-        expires_at__lte=timezone.now(),
-    ).update(status=Reservation.Status.CANCELLED)
-
-
 def validate_duration(date, start_time, end_time):
 
     start_dt = datetime.datetime.combine(date, start_time)
@@ -132,6 +127,9 @@ def confirm_reservation(*, reservation, user):
 
     if reservation.status != Reservation.Status.PENDING:
         raise ReservationConfirmationError("Only pending reservations can be confirmed")
+
+    if reservation.date < timezone.localdate():
+        raise ReservationConfirmationError("Cannot confirm past reservation")
 
     # change status to cancelled if is expired
     if reservation.expires_at and reservation.expires_at <= timezone.now():
@@ -331,6 +329,7 @@ def rooms_monthly_ranking(year, month):
 ##############
 # Automation #
 ##############
+
 
 def expire_pending_reservations():
     now = timezone.now()

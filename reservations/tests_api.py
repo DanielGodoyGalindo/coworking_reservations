@@ -179,7 +179,7 @@ class ReservationAPITest(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        
+
     def test_overlap_full_containment(self):
 
         Reservation.objects.create(
@@ -208,7 +208,7 @@ class ReservationAPITest(TestCase):
 
         self.assertEqual(response.status_code, 409)
         self.assertIn("booked", response.json()["error"])
-        
+
     def test_overlap_exact_same_time(self):
 
         Reservation.objects.create(
@@ -493,3 +493,36 @@ class ReservationAPITest(TestCase):
         self.assertEqual(response.status_code, 400)
         confirmed_reservation.refresh_from_db()
         self.assertEqual(confirmed_reservation.status, Reservation.Status.CONFIRMED)
+
+    def test_cannot_create_reservation_in_the_past(self):
+        payload = {
+            "room_id": self.room.id,
+            "date": str(timezone.localdate() - timedelta(days=1)),
+            "start_time": "09:00",
+            "end_time": "10:00",
+        }
+
+        self.client.login(username="test", password="1234")
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_cannot_confirm_reservation_in_the_past(self):
+
+        reservation = Reservation.objects.create(
+            room=self.room,
+            date=timezone.localdate() - timedelta(days=1),
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            status=Reservation.Status.PENDING,
+            user=self.user,
+        )
+
+        self.client.login(username="test", password="1234")
+        response = self.client.post(f"/api/reservations/{reservation.id}/confirm/")
+        self.assertEqual(response.status_code, 400)
