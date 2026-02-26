@@ -12,6 +12,8 @@ from django.db import transaction
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import F, ExpressionWrapper, DurationField, Sum
 from rooms.models import Room
+from django.db import IntegrityError
+
 # PermissionDenied throws 403
 
 
@@ -24,7 +26,12 @@ class ReservationConfirmationError(Exception):
 
 
 @transaction.atomic
-def create_reservation(*, room, date, start_time, end_time, user):
+def create_reservation(*, idempotency_key, room, date, start_time, end_time, user):
+
+    existing = Reservation.objects.filter(idempotency_key=idempotency_key).first()
+
+    if existing:
+        return existing
 
     if Reservation.overlapping_exists(room, date, start_time, end_time):
         raise ReservationOverlapError("Time slot already booked")
@@ -36,15 +43,20 @@ def create_reservation(*, room, date, start_time, end_time, user):
 
     validate_duration(date, start_time, end_time)
 
-    return Reservation.objects.create(
-        room=room,
-        date=date,
-        start_time=start_time,
-        end_time=end_time,
-        status=Reservation.Status.PENDING,
-        user=user,
-        expires_at=timezone.now() + timedelta(minutes=10),
-    )
+    try:
+        reservation = Reservation.objects.create(
+            idempotency_key=idempotency_key,
+            room=room,
+            date=date,
+            start_time=start_time,
+            end_time=end_time,
+            status=Reservation.Status.PENDING,
+            user=user,
+            expires_at=timezone.now() + timedelta(minutes=10),
+        )
+    except IntegrityError:
+        reservation = Reservation.objects.get(idempotency_key=idempotency_key)
+    return reservation
 
 
 def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
@@ -108,8 +120,8 @@ def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
 
 def validate_duration(date, start_time, end_time):
 
-    start_dt = datetime.datetime.combine(date, start_time)
-    end_dt = datetime.datetime.combine(date, end_time)
+    start_dt = datetime.combine(date, start_time)
+    end_dt = datetime.combine(date, end_time)
 
     duration_minutes = (end_dt - start_dt).total_seconds() / 60
 

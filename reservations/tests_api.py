@@ -1,5 +1,6 @@
 import json
 from datetime import date, time, timedelta
+import uuid
 from django.test import TestCase
 from reservations.services import get_available_slots, create_reservation
 from rooms.models import Room
@@ -526,3 +527,31 @@ class ReservationAPITest(TestCase):
         self.client.login(username="test", password="1234")
         response = self.client.post(f"/api/reservations/{reservation.id}/confirm/")
         self.assertEqual(response.status_code, 400)
+
+    def test_idempotent_reservation_creation(self):
+        key = str(uuid.uuid4())
+
+        payload = {
+            "room_id": self.room.id,
+            "date": "2026-03-10",
+            "start_time": "09:00",
+            "end_time": "10:00",
+        }
+
+        self.client.login(username="test", password="1234")
+
+        response1 = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+            HTTP_IDEMPOTENCY_KEY=key,
+        )
+
+        response2 = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+            HTTP_IDEMPOTENCY_KEY=key,
+        )
+
+        self.assertEqual(Reservation.objects.count(), 1)

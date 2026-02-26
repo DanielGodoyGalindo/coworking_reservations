@@ -85,8 +85,14 @@ def create_reservation_view(request):
 
     room = get_object_or_404(Room, id=data["room_id"])
 
+    idempotency_key = request.headers.get("Idempotency-Key")
+
+    if not idempotency_key:
+        return error_response("Idempotency-Key header required", 400)
+
     try:
         reservation = create_reservation(
+            idempotency_key=idempotency_key,
             room=room,
             date=date,
             start_time=start_time,

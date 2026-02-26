@@ -64,11 +64,15 @@ To execute the tests use:
 Just check in views if request.user is authenticated.
 If not, return 401
 
-Create delete endpoint in reservations/views.py
-add url and create integration tests
+**Create delete endpoint in reservations/views.py**
+Add url and create integration tests
 
 **Create Custom Django Management Commands:**
-add a Python module to a "core/management/commands" folder in a Django app
-create expire_reservations.py file with the command
-add app to settings > INSTALLED_APPS
+Add a Python module to a "core/management/commands" folder in a Django app
+Create expire_reservations.py file with the command
+Add app to settings > INSTALLED_APPS
 > python manage.py expire_reservations
+
+**Add idempotency key to prevent duplicated reservations**
+Add a key in the model to create unique-id-reservations.
+This uses UUID-based keys to prevent duplicate bookings caused by network retries.
