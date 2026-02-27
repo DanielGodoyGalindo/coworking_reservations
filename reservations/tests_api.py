@@ -2,7 +2,7 @@ import json
 from datetime import date, time, timedelta
 import uuid
 from django.test import TestCase
-from reservations.services import get_available_slots, create_reservation
+from reservations.services.reservations import get_available_slots, create_reservation
 from rooms.models import Room
 from reservations.models import Reservation
 from django.contrib.auth import get_user_model

@@ -1,5 +1,5 @@
 from datetime import date, time, datetime
-from reservations.services import monthly_occupancy_rate, occupancy_rate
+from reservations.services.reservations import monthly_occupancy_rate, occupancy_rate
 from reservations.models import Reservation
 from django.test import TestCase
 from rooms.models import Room

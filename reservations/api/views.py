@@ -3,7 +3,7 @@ from django.views.decorators.http import require_GET
 from django.shortcuts import get_object_or_404
 from datetime import date as date_type
 from rooms.models import Room
-from reservations.services import (
+from reservations.services.reservations import (
     confirm_reservation,
     get_available_slots,
     create_reservation,

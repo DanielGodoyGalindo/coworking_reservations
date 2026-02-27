@@ -1,5 +1,5 @@
 from datetime import date, time, datetime
-from reservations.services import expire_pending_reservations
+from reservations.services.reservations import expire_pending_reservations
 from reservations.models import Reservation
 from django.test import TestCase
 from rooms.models import Room

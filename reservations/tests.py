@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 from rooms.models import Room
 from reservations.models import Reservation
-from reservations.services import create_reservation, get_available_slots
+from reservations.services.reservations import create_reservation, get_available_slots
 from django.contrib.auth import get_user_model
 
 # Create your tests here.

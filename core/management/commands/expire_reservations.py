@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from reservations.services import expire_pending_reservations
+from reservations.services.reservations import expire_pending_reservations
 
 # Custom Django Management Commands
 # https://testdriven.io/tips/dbc14e1f-1231-4761-8ed4-3c82f8b16c08/
