@@ -3,8 +3,9 @@ from coworking_reservations import settings
 from reservations.models import Reservation
 from datetime import datetime
 from datetime import date, time
-from django.db.models import F, ExpressionWrapper, DurationField, Sum
+from django.db.models import F, Q, ExpressionWrapper, DurationField, Sum, Value
 from rooms.models import Room
+from django.db.models.functions import Coalesce
 
 
 def rooms_monthly_ranking(year, month):
@@ -63,9 +64,76 @@ def rooms_monthly_ranking(year, month):
     return ranking
 
 
-def best_performing_room():
-    return None
+def best_performing_room(start_date, end_date):
+    """
+    Returns the room with the highest total occupied time.
+    """
+
+    rooms = Room.objects.annotate(
+        total_occupied=Sum(
+            ExpressionWrapper(
+                F("reservation__end_time") - F("reservation__start_time"),
+                output_field=DurationField(),
+            ),
+            filter=(
+                Q(reservation__date__range=(start_date, end_date))
+                & Q(reservation__status=Reservation.Status.CONFIRMED)
+            ),
+        )
+    ).order_by("-total_occupied")
+
+    return rooms.first()
 
 
-def total_hours_per_room():
-    return None
+def total_hours_per_room(start_date, end_date):
+    """
+    Returns total occupied hours per room in a date range.
+    """
+
+    rooms = Room.objects.annotate(
+        total_duration=Coalesce(
+            Sum(
+                ExpressionWrapper(
+                    F("reservation__end_time") - F("reservation__start_time"),
+                    output_field=DurationField(),
+                ),
+                filter=(
+                    Q(reservation__date__range=(start_date, end_date))
+                    & Q(reservation__status=Reservation.Status.CONFIRMED)
+                ),
+            ),
+            Value(0),
+        )
+    )
+
+    result = []
+
+    for room in rooms:
+        hours = room.total_duration.total_seconds() / 3600 if room.total_duration else 0
+
+        result.append(
+            {
+                "room_id": room.id,
+                "room_name": room.name,
+                "total_hours": round(hours, 2),
+            }
+        )
+
+    return result
+
+
+def top_3_rooms(start_date, end_date):
+    rooms = Room.objects.annotate(
+        total_occupied=Sum(
+            ExpressionWrapper(
+                F("reservation__end_time") - F("reservation__start_time"),
+                output_field=DurationField(),
+            ),
+            filter=(
+                Q(reservation__date__range=(start_date, end_date))
+                & Q(reservation__status=Reservation.Status.CONFIRMED)
+            ),
+        )
+    ).order_by("-total_occupied")
+
+    return rooms[:3]
