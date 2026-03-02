@@ -9,6 +9,7 @@ class Reservation(models.Model):
         PENDING = "PENDING", "Pending"
         CONFIRMED = "CONFIRMED", "Confirmed"
         CANCELLED = "CANCELLED", "Cancelled"
+        EXPIRED = "EXPIRED", "Expired"
 
     idempotency_key = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
 

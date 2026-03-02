@@ -136,9 +136,9 @@ def confirm_reservation(*, reservation, user):
     if reservation.date < timezone.localdate():
         raise ReservationConfirmationError("Cannot confirm past reservation")
 
-    # change status to cancelled if is expired
+    # change status to expired if is expired
     if reservation.expires_at and reservation.expires_at <= timezone.now():
-        reservation.status = Reservation.Status.CANCELLED
+        reservation.status = Reservation.Status.EXPIRED
         reservation.save()
         raise ReservationConfirmationError("Reservation has expired")
 
@@ -162,6 +162,6 @@ def expire_pending_reservations():
         expires_at__lte=now,
     )
 
-    count = expired.update(status=Reservation.Status.CANCELLED)
+    count = expired.update(status=Reservation.Status.EXPIRED)
 
     return count
