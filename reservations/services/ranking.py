@@ -137,3 +137,59 @@ def top_3_rooms(start_date, end_date):
     ).order_by("-total_occupied")
 
     return rooms[:3]
+
+
+def utilization_percentage_per_room(start_date, end_date):
+    """
+    Returns utilization percentage per room in a date range.
+    """
+
+    OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
+    CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
+
+    daily_available_seconds = (
+        datetime.combine(start_date, CLOSING_HOUR)
+        - datetime.combine(start_date, OPENING_HOUR)
+    ).total_seconds()
+
+    number_of_days = (end_date - start_date).days + 1
+    total_available_seconds = daily_available_seconds * number_of_days
+
+    rooms = Room.objects.annotate(
+        total_duration=Coalesce(
+            Sum(
+                ExpressionWrapper(
+                    F("reservation__end_time") - F("reservation__start_time"),
+                    output_field=DurationField(),
+                ),
+                filter=(
+                    Q(reservation__date__range=(start_date, end_date))
+                    & Q(reservation__status=Reservation.Status.CONFIRMED)
+                ),
+            ),
+            Value(0),
+        )
+    )
+
+    result = []
+
+    for room in rooms:
+        occupied_seconds = (
+            room.total_duration.total_seconds() if room.total_duration else 0
+        )
+
+        utilization = (
+            occupied_seconds / total_available_seconds
+            if total_available_seconds > 0
+            else 0
+        )
+
+        result.append(
+            {
+                "room_id": room.id,
+                "room_name": room.name,
+                "utilization_percentage": round(utilization * 100, 2),
+            }
+        )
+
+    return result
