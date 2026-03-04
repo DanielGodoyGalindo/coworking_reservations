@@ -1,15 +1,11 @@
-import calendar
 from django.db import transaction
-from django.http import JsonResponse
 from coworking_reservations import settings
-from reservations import models
 from reservations.models import Reservation
 from django.utils import timezone
 from datetime import datetime
-from datetime import date, timedelta, time
+from datetime import timedelta, time
 from django.db.models import Q
-from django.db import transaction
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
 # PermissionDenied throws 403
 

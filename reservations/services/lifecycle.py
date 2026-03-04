@@ -1,5 +1,4 @@
 from reservations.models import Reservation
-from django.utils import timezone
 from django.db.models import F, ExpressionWrapper, DurationField, Avg
 from rooms.models import Room
 from datetime import datetime, time
@@ -92,25 +91,29 @@ def expiration_rate(start_date, end_date):
 
 def average_time_to_confirmation(start_date, end_date):
     """
-    Returns average time (in seconds) it takes to confirm a reservation.
+    Calcula el tiempo promedio (en segundos) que tarda una reserva en confirmarse,
+    de manera segura para SQLite y cualquier base de datos.
     """
 
     confirmed_reservations = Reservation.objects.filter(
         date__range=(start_date, end_date),
         status=Reservation.Status.CONFIRMED,
         confirmed_at__isnull=False,
-    ).annotate(
-        confirmation_time=ExpressionWrapper(
-            F("confirmed_at") - F("created_at"), output_field=DurationField()
-        )
-    )
+        created_at__isnull=False
+    ).values_list("created_at", "confirmed_at")
 
-    avg_duration = confirmed_reservations.aggregate(avg=Avg("confirmation_time"))["avg"]
+    total_seconds = 0
+    count = 0
 
-    if not avg_duration:
+    for created, confirmed in confirmed_reservations:
+        delta = confirmed - created
+        total_seconds += delta.total_seconds()
+        count += 1
+
+    if count == 0:
         return 0
 
-    return avg_duration.total_seconds()
+    return total_seconds / count
 
 
 def global_utilization(start_date, end_date):

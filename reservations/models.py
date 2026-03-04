@@ -36,12 +36,14 @@ class Reservation(models.Model):
         default=Status.PENDING,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-
     expires_at = models.DateTimeField(
         null=True,
         blank=True,
     )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+
 
     @staticmethod
     def overlapping_exists(room, date, start_time, end_time):

@@ -1,7 +1,9 @@
 from django.http import JsonResponse
+from django.views import View
 from django.views.decorators.http import require_GET
 from django.shortcuts import get_object_or_404
-from datetime import date as date_type
+from datetime import date as date_type, datetime
+from reservations.services.dashboard import dashboard_metrics
 from rooms.models import Room
 from reservations.services.reservations import (
     confirm_reservation,
@@ -210,3 +212,27 @@ def confirm_reservation_view(request, reservation_id):
 
 def error_response(message, status_code):
     return JsonResponse({"error": message}, status=status_code)
+
+
+class DashboardView(View):
+    def get(self, request):
+
+        start_str = request.GET.get("start")
+        end_str = request.GET.get("end")
+
+        if not start_str or not end_str:
+            return JsonResponse(
+                {"error": "start and end parameters are required"}, status=400
+            )
+
+        try:
+            start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+        except ValueError:
+            return JsonResponse(
+                {"error": "Invalid date format. Use YYYY-MM-DD"}, status=400
+            )
+
+        data = dashboard_metrics(start_date, end_date)
+
+        return JsonResponse(data, safe=False)

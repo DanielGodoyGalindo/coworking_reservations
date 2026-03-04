@@ -1,15 +1,11 @@
 import calendar
-from coworking_reservations import settings
 from reservations.models import Reservation
-from datetime import datetime
-from datetime import date, time
-from django.db.models import F, Q, ExpressionWrapper, DurationField, Sum, Value
 from rooms.models import Room
-from django.db.models.functions import Coalesce
+from datetime import datetime, time, timedelta, date
+from coworking_reservations import settings
 
 
 def rooms_monthly_ranking(year, month):
-
     OPENING_HOUR = settings.COWORKING_OPENING_HOUR
     CLOSING_HOUR = settings.COWORKING_CLOSING_HOUR
 
@@ -17,169 +13,102 @@ def rooms_monthly_ranking(year, month):
     last_day = calendar.monthrange(year, month)[1]
     end_date = date(year, month, last_day)
 
-    daily_seconds = (
-        datetime.combine(start_date, time(CLOSING_HOUR))
-        - datetime.combine(start_date, time(OPENING_HOUR))
-    ).total_seconds()
-
+    daily_seconds = (CLOSING_HOUR - OPENING_HOUR) * 3600
     total_days = (end_date - start_date).days + 1
-    available_per_room = total_days * daily_seconds
+    available_per_room = daily_seconds * total_days
 
-    rooms = Room.objects.all()
     ranking = []
 
-    for room in rooms:
-        reservations = (
-            Reservation.objects.filter(
-                room=room,
-                date__range=(start_date, end_date),
-                status=Reservation.Status.CONFIRMED,
-            )
-            .annotate(
-                duration=ExpressionWrapper(
-                    F("end_time") - F("start_time"),
-                    output_field=DurationField(),
-                )
-            )
-            .aggregate(total=Sum("duration"))
-        )
+    for room in Room.objects.all():
+        reservations = Reservation.objects.filter(
+            room=room,
+            date__range=(start_date, end_date),
+            status=Reservation.Status.CONFIRMED,
+            start_time__isnull=False,
+            end_time__isnull=False,
+        ).values_list("start_time", "end_time")
 
-        occupied_seconds = (
-            reservations["total"].total_seconds() if reservations["total"] else 0
+        total_seconds = sum(
+            (end - start).total_seconds() for start, end in reservations
         )
+        occupancy = total_seconds / available_per_room if available_per_room > 0 else 0
 
-        occupancy = (
-            occupied_seconds / available_per_room if available_per_room > 0 else 0
-        )
-
-        ranking.append(
-            {
-                "room": room,
-                "occupancy": occupancy,
-            }
-        )
+        ranking.append({"room": room, "occupancy": occupancy})
 
     ranking.sort(key=lambda x: x["occupancy"], reverse=True)
-
     return ranking
 
 
 def best_performing_room(start_date, end_date):
-    """
-    Returns the room with the highest total occupied time.
-    """
+    rooms_data = []
 
-    rooms = Room.objects.annotate(
-        total_occupied=Sum(
-            ExpressionWrapper(
-                F("reservation__end_time") - F("reservation__start_time"),
-                output_field=DurationField(),
-            ),
-            filter=(
-                Q(reservation__date__range=(start_date, end_date))
-                & Q(reservation__status=Reservation.Status.CONFIRMED)
-            ),
+    for room in Room.objects.all():
+        reservations = Reservation.objects.filter(
+            room=room,
+            date__range=(start_date, end_date),
+            status=Reservation.Status.CONFIRMED,
+            start_time__isnull=False,
+            end_time__isnull=False,
+        ).values_list("start_time", "end_time")
+
+        total_seconds = sum(
+            (end - start).total_seconds() for start, end in reservations
         )
-    ).order_by("-total_occupied")
+        rooms_data.append((room, total_seconds))
 
-    return rooms.first()
+    if not rooms_data:
+        return None
 
-
-def total_hours_per_room(start_date, end_date):
-    """
-    Returns total occupied hours per room in a date range.
-    """
-
-    rooms = Room.objects.annotate(
-        total_duration=Coalesce(
-            Sum(
-                ExpressionWrapper(
-                    F("reservation__end_time") - F("reservation__start_time"),
-                    output_field=DurationField(),
-                ),
-                filter=(
-                    Q(reservation__date__range=(start_date, end_date))
-                    & Q(reservation__status=Reservation.Status.CONFIRMED)
-                ),
-            ),
-            Value(0),
-        )
-    )
-
-    result = []
-
-    for room in rooms:
-        hours = room.total_duration.total_seconds() / 3600 if room.total_duration else 0
-
-        result.append(
-            {
-                "room_id": room.id,
-                "room_name": room.name,
-                "total_hours": round(hours, 2),
-            }
-        )
-
-    return result
+    # Ordenamos por tiempo total ocupado
+    rooms_data.sort(key=lambda x: x[1], reverse=True)
+    return rooms_data[0][0]
 
 
 def top_3_rooms(start_date, end_date):
-    rooms = Room.objects.annotate(
-        total_occupied=Sum(
-            ExpressionWrapper(
-                F("reservation__end_time") - F("reservation__start_time"),
-                output_field=DurationField(),
-            ),
-            filter=(
-                Q(reservation__date__range=(start_date, end_date))
-                & Q(reservation__status=Reservation.Status.CONFIRMED)
-            ),
-        )
-    ).order_by("-total_occupied")
+    rooms_data = []
 
-    return rooms[:3]
+    for room in Room.objects.all():
+        reservations = Reservation.objects.filter(
+            room=room,
+            date__range=(start_date, end_date),
+            status=Reservation.Status.CONFIRMED,
+            start_time__isnull=False,
+            end_time__isnull=False,
+        ).values_list("start_time", "end_time")
+
+        total_seconds = sum(
+            (end - start).total_seconds() for start, end in reservations
+        )
+        rooms_data.append((room, total_seconds))
+
+    rooms_data.sort(key=lambda x: x[1], reverse=True)
+    return [r[0] for r in rooms_data[:3]]
 
 
 def utilization_percentage_per_room(start_date, end_date):
-    """
-    Returns utilization percentage per room in a date range.
-    """
+    OPENING_HOUR = settings.COWORKING_OPENING_HOUR
+    CLOSING_HOUR = settings.COWORKING_CLOSING_HOUR
 
-    OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
-    CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
-
-    daily_available_seconds = (
-        datetime.combine(start_date, CLOSING_HOUR)
-        - datetime.combine(start_date, OPENING_HOUR)
-    ).total_seconds()
-
-    number_of_days = (end_date - start_date).days + 1
-    total_available_seconds = daily_available_seconds * number_of_days
-
-    rooms = Room.objects.annotate(
-        total_duration=Coalesce(
-            Sum(
-                ExpressionWrapper(
-                    F("reservation__end_time") - F("reservation__start_time"),
-                    output_field=DurationField(),
-                ),
-                filter=(
-                    Q(reservation__date__range=(start_date, end_date))
-                    & Q(reservation__status=Reservation.Status.CONFIRMED)
-                ),
-            ),
-            Value(0),
-        )
-    )
+    daily_seconds = (CLOSING_HOUR - OPENING_HOUR) * 3600
+    total_days = (end_date - start_date).days + 1
+    total_available_seconds = daily_seconds * total_days
 
     result = []
 
-    for room in rooms:
-        occupied_seconds = (
-            room.total_duration.total_seconds() if room.total_duration else 0
-        )
+    for room in Room.objects.all():
+        reservations = Reservation.objects.filter(
+            room=room,
+            date__range=(start_date, end_date),
+            status=Reservation.Status.CONFIRMED,
+            start_time__isnull=False,
+            end_time__isnull=False,
+        ).values_list("start_time", "end_time")
 
+        total_seconds = sum(
+            (end - start).total_seconds() for start, end in reservations
+        )
         utilization = (
-            occupied_seconds / total_available_seconds
+            total_seconds / total_available_seconds
             if total_available_seconds > 0
             else 0
         )
@@ -190,6 +119,43 @@ def utilization_percentage_per_room(start_date, end_date):
                 "room_name": room.name,
                 "utilization_percentage": round(utilization * 100, 2),
             }
+        )
+
+    return result
+
+
+def total_hours_per_room(start_date, end_date):
+    """
+    Devuelve las horas totales ocupadas por sala en un rango de fechas.
+    Compatible con SQLite y cualquier base de datos.
+    """
+
+    result = []
+
+    rooms = Room.objects.all()
+
+    for room in rooms:
+        reservations = Reservation.objects.filter(
+            room=room,
+            date__range=(start_date, end_date),
+            status=Reservation.Status.CONFIRMED,
+            start_time__isnull=False,
+            end_time__isnull=False,
+        ).values_list("start_time", "end_time")
+
+        total_seconds = 0
+
+        for start, end in reservations:
+            if start and end:
+                delta = end - start
+                total_seconds += delta.total_seconds()
+
+        total_hours = round(
+            total_seconds / 3600, 2
+        )
+
+        result.append(
+            {"room_id": room.id, "room_name": room.name, "total_hours": total_hours}
         )
 
     return result

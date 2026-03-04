@@ -5,6 +5,7 @@ from .views import (
     create_reservation_view,
     delete_reservation_view,
     list_reservations_view,
+    DashboardView
 )
 
 urlpatterns = [
@@ -13,4 +14,5 @@ urlpatterns = [
     path("my-reservations/", list_reservations_view),
     path("reservations/<int:reservation_id>/", delete_reservation_view),
     path("reservations/<int:reservation_id>/confirm/", confirm_reservation_view),
+    path("dashboard/", DashboardView.as_view(), name="dashboard"),
 ]
