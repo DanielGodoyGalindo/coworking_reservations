@@ -76,3 +76,14 @@ Add app to settings > INSTALLED_APPS
 **Add idempotency key to prevent duplicated reservations**
 Add a key in the model to create unique-id-reservations.
 This uses UUID-based keys to prevent duplicate bookings caused by network retries.
+
+**API Dashboard created**
+> python manage.py runserver
+> http://127.0.0.1:8000/api/dashboard/?start=2026-03-01&end=2026-03-31
+
+**Check if there are rooms created**
+> python manage.py shell
+
+Then type:
+> from rooms.models import Room
+> Room.objects.all()
