@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.db.models import Value
+from datetime import timedelta, date
 
 
 def total_reservations(start_date, end_date):
@@ -91,15 +92,14 @@ def expiration_rate(start_date, end_date):
 
 def average_time_to_confirmation(start_date, end_date):
     """
-    Calcula el tiempo promedio (en segundos) que tarda una reserva en confirmarse,
-    de manera segura para SQLite y cualquier base de datos.
+    Avg time in seconds from created to confirmed reservations
     """
 
     confirmed_reservations = Reservation.objects.filter(
         date__range=(start_date, end_date),
         status=Reservation.Status.CONFIRMED,
         confirmed_at__isnull=False,
-        created_at__isnull=False
+        created_at__isnull=False,
     ).values_list("created_at", "confirmed_at")
 
     total_seconds = 0
@@ -148,7 +148,7 @@ def global_utilization(start_date, end_date):
                     output_field=DurationField(),
                 )
             ),
-            Value(0),
+            Value(timedelta(0), output_field=DurationField()),
         )
     )["total"]
 

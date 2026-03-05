@@ -29,7 +29,12 @@ def rooms_monthly_ranking(year, month):
         ).values_list("start_time", "end_time")
 
         total_seconds = sum(
-            (end - start).total_seconds() for start, end in reservations
+            (
+                datetime.combine(date.today(), end)
+                - datetime.combine(date.today(), start)
+            ).total_seconds()
+            for start, end in reservations
+            if start and end
         )
         occupancy = total_seconds / available_per_room if available_per_room > 0 else 0
 
@@ -52,7 +57,12 @@ def best_performing_room(start_date, end_date):
         ).values_list("start_time", "end_time")
 
         total_seconds = sum(
-            (end - start).total_seconds() for start, end in reservations
+            (
+                datetime.combine(date.today(), end)
+                - datetime.combine(date.today(), start)
+            ).total_seconds()
+            for start, end in reservations
+            if start and end
         )
         rooms_data.append((room, total_seconds))
 
@@ -77,7 +87,12 @@ def top_3_rooms(start_date, end_date):
         ).values_list("start_time", "end_time")
 
         total_seconds = sum(
-            (end - start).total_seconds() for start, end in reservations
+            (
+                datetime.combine(date.today(), end)
+                - datetime.combine(date.today(), start)
+            ).total_seconds()
+            for start, end in reservations
+            if start and end
         )
         rooms_data.append((room, total_seconds))
 
@@ -105,7 +120,12 @@ def utilization_percentage_per_room(start_date, end_date):
         ).values_list("start_time", "end_time")
 
         total_seconds = sum(
-            (end - start).total_seconds() for start, end in reservations
+            (
+                datetime.combine(date.today(), end)
+                - datetime.combine(date.today(), start)
+            ).total_seconds()
+            for start, end in reservations
+            if start and end
         )
         utilization = (
             total_seconds / total_available_seconds
@@ -125,10 +145,6 @@ def utilization_percentage_per_room(start_date, end_date):
 
 
 def total_hours_per_room(start_date, end_date):
-    """
-    Devuelve las horas totales ocupadas por sala en un rango de fechas.
-    Compatible con SQLite y cualquier base de datos.
-    """
 
     result = []
 
@@ -147,12 +163,13 @@ def total_hours_per_room(start_date, end_date):
 
         for start, end in reservations:
             if start and end:
-                delta = end - start
+                start_dt = datetime.combine(date.today(), start)
+                end_dt = datetime.combine(date.today(), end)
+
+                delta = end_dt - start_dt
                 total_seconds += delta.total_seconds()
 
-        total_hours = round(
-            total_seconds / 3600, 2
-        )
+                total_hours = round(total_seconds / 3600, 2)
 
         result.append(
             {"room_id": room.id, "room_name": room.name, "total_hours": total_hours}

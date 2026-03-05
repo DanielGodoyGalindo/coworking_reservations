@@ -77,6 +77,10 @@ Add app to settings > INSTALLED_APPS
 Add a key in the model to create unique-id-reservations.
 This uses UUID-based keys to prevent duplicate bookings caused by network retries.
 
+**Create seeders**
+Create BaseCommand to seed database with rooms and reservations
+Create seed_data.py @ core/management/commands
+
 **API Dashboard created**
 > python manage.py runserver
 > http://127.0.0.1:8000/api/dashboard/?start=2026-03-01&end=2026-03-31
