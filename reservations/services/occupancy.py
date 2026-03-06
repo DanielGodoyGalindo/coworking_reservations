@@ -5,6 +5,7 @@ from datetime import datetime
 from datetime import date, timedelta, time
 from django.db.models import F, ExpressionWrapper, DurationField, Sum
 from rooms.models import Room
+from collections import Counter
 
 
 ###################
@@ -206,3 +207,24 @@ def peak_day(year, month):
         "date": peak,
         "occupancy_rate": max_rate,
     }
+
+
+def most_used_time_slot(start_date, end_date):
+
+    reservations = Reservation.objects.filter(
+        date__range=(start_date, end_date),
+        status=Reservation.Status.CONFIRMED,
+    ).values_list("start_time")
+
+    counter = Counter()
+
+    for start in reservations:
+        if start:
+            counter[start[0].hour] += 1
+
+    if not counter:
+        return None
+
+    hour, count = counter.most_common(1)[0]
+
+    return {"hour": hour, "reservations": count}

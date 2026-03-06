@@ -155,3 +155,54 @@ def global_utilization(start_date, end_date):
     occupied_seconds = total_duration.total_seconds() if total_duration else 0
 
     return round((occupied_seconds / total_available_seconds) * 100, 2)
+
+
+def average_booking_duration(start_date, end_date):
+    """
+    Average duration of reservations in seconds
+    """
+
+    reservations = Reservation.objects.filter(
+        date__range=(start_date, end_date),
+        status=Reservation.Status.CONFIRMED,
+    ).values_list("start_time", "end_time")
+
+    total_seconds = 0
+    count = 0
+
+    for start, end in reservations:
+        if start and end:
+            start_dt = datetime.combine(date.today(), start)
+            end_dt = datetime.combine(date.today(), end)
+            total_seconds += (end_dt - start_dt).total_seconds()
+            count += 1
+
+    if count == 0:
+        return 0
+
+    return total_seconds / count
+
+
+def average_booking_lead_time(start_date, end_date):
+    """
+    Average time between reservation creation and reservation date
+    """
+
+    reservations = Reservation.objects.filter(
+        date__range=(start_date, end_date),
+        created_at__isnull=False,
+    ).values_list("created_at", "date")
+
+    total_seconds = 0
+    count = 0
+
+    for created, reservation_date in reservations:
+        if created and reservation_date:
+            delta = reservation_date - created.date()
+            total_seconds += delta.total_seconds()
+            count += 1
+
+    if count == 0:
+        return 0
+
+    return total_seconds / count
