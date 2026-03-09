@@ -6,6 +6,7 @@ from datetime import date, timedelta, time
 from django.db.models import F, ExpressionWrapper, DurationField, Sum
 from rooms.models import Room
 from collections import Counter
+from collections import defaultdict
 
 
 ###################
@@ -228,3 +229,32 @@ def most_used_time_slot(start_date, end_date):
     hour, count = counter.most_common(1)[0]
 
     return {"hour": hour, "reservations": count}
+
+
+def room_heatmap(start_date, end_date):
+
+    reservations = Reservation.objects.filter(
+        date__range=(start_date, end_date),
+        status=Reservation.Status.CONFIRMED,
+    ).values_list("date", "start_time")
+
+    heatmap = {
+        day: {hour: 0 for hour in range(24)}
+        for day in [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
+    }
+
+    for reservation_date, start_time in reservations:
+        if reservation_date and start_time:
+            weekday = reservation_date.strftime("%A").lower()
+            hour = start_time.hour
+            heatmap[weekday][hour] += 1
+
+    return heatmap

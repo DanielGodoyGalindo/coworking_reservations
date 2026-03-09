@@ -7,7 +7,7 @@ from reservations.services.lifecycle import (
     global_utilization,
     total_reservations,
 )
-from reservations.services.occupancy import most_used_time_slot, peak_day
+from reservations.services.occupancy import most_used_time_slot, peak_day, room_heatmap
 from reservations.services.ranking import (
     top_3_rooms,
     total_hours_per_room,
@@ -32,9 +32,10 @@ def dashboard_metrics(start_date, end_date):
                 ),
                 "peak_day": peak_day(start_date.year, start_date.month),
                 "most_used_time_slot": most_used_time_slot(start_date, end_date),
+                "room_heatmap": room_heatmap(start_date, end_date),
                 "top_3_rooms": [
                     {"id": room.id, "name": room.name} for room in top_rooms
-                ],
+                ]
             },
             "lifecycle": {
                 "total_reservations": total_reservations(start_date, end_date),
