@@ -1,4 +1,6 @@
 from django.urls import path
+
+from reservations.views import dashboard_page
 from .views import (
     availability_view,
     confirm_reservation_view,

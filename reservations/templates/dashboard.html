@@ -1,0 +1,10 @@
+<p>Total reservations: <span id="total"></span></p>
+
+<script>
+  fetch(`/api/dashboard/?start=2026-03-01&end=2026-03-31`)
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("total").textContent =
+        data.metrics.lifecycle.total_reservations;
+    });
+</script>

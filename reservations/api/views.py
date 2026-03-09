@@ -236,3 +236,6 @@ class DashboardView(View):
         data = dashboard_metrics(start_date, end_date)
 
         return JsonResponse(data, safe=False)
+
+
+
