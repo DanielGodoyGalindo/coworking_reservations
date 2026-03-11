@@ -1,36 +1,50 @@
-<h1>Dashboard</h1>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Dashboard</h1>
 
-<h2>Period</h2>
-<p>Start: <span id="start"></span></p>
-<p>End: <span id="end"></span></p>
-<p>Days: <span id="days"></span></p>
+    <div>
+        <span>Select dates:</span>
+        <div>
+            <input type="date" id="start-date">
+            <input type="date" id="end-date">
+            <button onclick="loadDashboard()">Load</button>
+        </div>
+    </div>
 
-<h2>Lifecycle</h2>
-<p>Total reservations: <span id="total"></span></p>
-<p>Conversion rate: <span id="conversion"></span></p>
-<p>Expiration rate: <span id="expiration"></span></p>
+    <h2>Period</h2>
+    <p>Start: <span id="start"></span></p>
+    <p>End: <span id="end"></span></p>
+    <p>Days: <span id="days"></span></p>
 
-<h2>Occupancy</h2>
-<p>Global utilization: <span id="utilization"></span></p>
+    <h2>Lifecycle</h2>
+    <p>Total reservations: <span id="total"></span></p>
+    <p>Conversion rate: <span id="conversion"></span></p>
+    <p>Expiration rate: <span id="expiration"></span></p>
 
-<h2>Top Rooms</h2>
-<ul id="top-rooms"></ul>
+    <h2>Occupancy</h2>
+    <p>Global utilization: <span id="utilization"></span></p>
 
-<h2>Hours per Room</h2>
-<ul id="hours-per-room"></ul>
+    <h2>Top Rooms</h2>
+    <ul id="top-rooms"></ul>
 
-<input type="date" id="start-date">
-<input type="date" id="end-date">
-<button onclick="loadDashboard()">Load</button>
+    <h2>Hours per Room</h2>
+    <ul id="hours-per-room"></ul>
+    <canvas id="hoursChart"></canvas>
 
-{% comment %} <script>
-  fetch(`/api/dashboard/?start=2026-03-01&end=2026-03-31`)
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById("total").textContent =
-        data.metrics.lifecycle.total_reservations;
-    });
-</script> {% endcomment %}
+    <h2>Utilization per Room</h2>
+    <canvas id="utilizationChart"></canvas>
+
+    {% comment %} <script>
+    fetch(`/api/dashboard/?start=2026-03-01&end=2026-03-31`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("total").textContent =
+            data.metrics.lifecycle.total_reservations;
+        });
+    </script> {% endcomment %}
+</body>
 
 <script>
 
@@ -81,6 +95,47 @@ function loadDashboard() {
         li.textContent = `${room.room_name}: ${room.total_hours} hours`;
         hoursList.appendChild(li);
       });
+      
+      // HOURS PER ROOM CHART
+      const roomNames = data.metrics.rooms.total_hours_per_room.map(r => r.room_name)
+      const roomHours = data.metrics.rooms.total_hours_per_room.map(r => r.total_hours)
+
+      if (hoursChart && typeof hoursChart.destroy === "function") {
+        hoursChart.destroy()
+      }
+
+      const ctx1 = document.getElementById("hoursChart")
+
+      hoursChart = new Chart(ctx1, {
+        type: "bar",
+        data: {
+          labels: roomNames,
+          datasets: [{
+            label: "Hours",
+            data: roomHours
+          }]
+        }
+      })
+
+      // UTILIZATION PER ROOM
+      const utilNames = data.metrics.rooms.utilization_per_room.map(r => r.room_name)
+      const utilValues = data.metrics.rooms.utilization_per_room.map(r => r.utilization_percentage)
+
+      if (utilizationChart && typeof utilizationChart.destroy === "function") {
+        utilizationChart.destroy()
+      }
+
+      const ctx2 = document.getElementById("utilizationChart")
+      utilizationChart = new Chart(ctx2, {
+        type: "bar",
+        data: {
+          labels: utilNames,
+          datasets: [{
+            label: "Utilization %",
+            data: utilValues
+          }]
+        }
+      })
 
     });
 }

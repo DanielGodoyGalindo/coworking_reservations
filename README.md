@@ -91,3 +91,7 @@ Create seed_data.py @ core/management/commands
 Then type:
 > from rooms.models import Room
 > Room.objects.all()
+
+**Simple Dashboard created**
+Run server then:
+> http://127.0.0.1:8000/dashboard
