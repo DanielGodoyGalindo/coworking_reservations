@@ -95,3 +95,6 @@ Then type:
 **Simple Dashboard created**
 Run server then:
 > http://127.0.0.1:8000/dashboard
+
+**Add Charts.js script in Dashboard**
+https://www.chartjs.org/docs/latest/getting-started/

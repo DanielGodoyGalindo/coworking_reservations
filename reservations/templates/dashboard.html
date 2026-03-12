@@ -31,10 +31,10 @@
 
     <h2>Hours per Room</h2>
     <ul id="hours-per-room"></ul>
-    <canvas id="hoursChart"></canvas>
+    <canvas id="hoursChart" style="height:20vh; width:40vw; max-width:75%"></canvas>
 
     <h2>Utilization per Room</h2>
-    <canvas id="utilizationChart"></canvas>
+    <canvas id="utilizationChart" style="height:20vh; width:40vw; max-width:75%"></canvas>
 
     {% comment %} <script>
     fetch(`/api/dashboard/?start=2026-03-01&end=2026-03-31`)
@@ -112,7 +112,8 @@ function loadDashboard() {
           labels: roomNames,
           datasets: [{
             label: "Hours",
-            data: roomHours
+            data: roomHours,
+            backgroundColor: "rgba(75, 192, 192, 0.7)"
           }]
         }
       })
@@ -132,7 +133,8 @@ function loadDashboard() {
           labels: utilNames,
           datasets: [{
             label: "Utilization %",
-            data: utilValues
+            data: utilValues,
+            backgroundColor: "#FF6384"
           }]
         }
       })
