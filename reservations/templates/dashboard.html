@@ -1,5 +1,8 @@
+{% load static %}
+
 <head>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'reservations/dashboard.css' %}">
 </head>
 <body>
     <h1>Dashboard</h1>
@@ -13,37 +16,48 @@
         </div>
     </div>
 
-    <h2>Period</h2>
-    <p>Start: <span id="start"></span></p>
-    <p>End: <span id="end"></span></p>
-    <p>Days: <span id="days"></span></p>
+    <div class="card">
+        <h2>Period</h2>
+        <div class="inner_card">
+            <p>Start: <span id="start"></span></p>
+            <p>End: <span id="end"></span></p>
+            <p>Days: <span id="days"></span></p>
+        </div>
+    </div>
 
-    <h2>Lifecycle</h2>
-    <p>Total reservations: <span id="total"></span></p>
-    <p>Conversion rate: <span id="conversion"></span></p>
-    <p>Expiration rate: <span id="expiration"></span></p>
+    <div class="card">
+        <h2>Lifecycle</h2>
+        <div class="inner_card">
+            <p>Total reservations: <span id="total"></span></p>
+            <p>Conversion rate: <span id="conversion"></span></p>
+            <p>Expiration rate: <span id="expiration"></span></p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Occupancy</h2>
+        <div class="inner_card">
+            <p>Global utilization: <span id="utilization"></span></p>
+        </div>
+    </div>
 
-    <h2>Occupancy</h2>
-    <p>Global utilization: <span id="utilization"></span></p>
 
-    <h2>Top Rooms</h2>
-    <ul id="top-rooms"></ul>
+    <div class="card">
+        <h2>Top Rooms</h2>
+            <ul id="top-rooms"></ul>
+    </div>
 
-    <h2>Hours per Room</h2>
-    <ul id="hours-per-room"></ul>
-    <canvas id="hoursChart" style="height:20vh; width:40vw; max-width:75%"></canvas>
+    <div class="card">
+        <h2>Hours per Room</h2>
+        <ul id="hours-per-room"></ul>
+        <canvas id="hoursChart"></canvas>
+    </div>
 
-    <h2>Utilization per Room</h2>
-    <canvas id="utilizationChart" style="height:20vh; width:40vw; max-width:75%"></canvas>
+    <div class="card">
+        <h2>Utilization per Room</h2>
+        <canvas id="utilizationChart"></canvas>
+    </div>
 
-    {% comment %} <script>
-    fetch(`/api/dashboard/?start=2026-03-01&end=2026-03-31`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("total").textContent =
-            data.metrics.lifecycle.total_reservations;
-        });
-    </script> {% endcomment %}
 </body>
 
 <script>
@@ -105,7 +119,6 @@ function loadDashboard() {
       }
 
       const ctx1 = document.getElementById("hoursChart")
-
       hoursChart = new Chart(ctx1, {
         type: "bar",
         data: {
