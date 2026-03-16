@@ -3,6 +3,7 @@ from reservations.models import Reservation
 from rooms.models import Room
 from datetime import datetime, time, timedelta, date
 from coworking_reservations import settings
+from django.db.models import F, ExpressionWrapper, DurationField, Sum
 
 
 def rooms_monthly_ranking(year, month):
@@ -146,33 +147,35 @@ def utilization_percentage_per_room(start_date, end_date):
 
 def total_hours_per_room(start_date, end_date):
 
-    result = []
-
-    rooms = Room.objects.all()
-
-    for room in rooms:
-        reservations = Reservation.objects.filter(
-            room=room,
+    reservations = (
+        Reservation.objects.filter(
             date__range=(start_date, end_date),
             status=Reservation.Status.CONFIRMED,
             start_time__isnull=False,
             end_time__isnull=False,
-        ).values_list("start_time", "end_time")
+        )
+        .annotate(
+            duration=ExpressionWrapper(
+                F("end_time") - F("start_time"),
+                output_field=DurationField(),
+            )
+        )
+        .values("room__id", "room__name")
+        .annotate(total_duration=Sum("duration"))
+        .order_by("-total_duration")
+    )
 
-        total_seconds = 0
+    result = []
 
-        for start, end in reservations:
-            if start and end:
-                start_dt = datetime.combine(date.today(), start)
-                end_dt = datetime.combine(date.today(), end)
-
-                delta = end_dt - start_dt
-                total_seconds += delta.total_seconds()
-
-                total_hours = round(total_seconds / 3600, 2)
+    for r in reservations:
+        hours = round(r["total_duration"].total_seconds() / 3600, 2)
 
         result.append(
-            {"room_id": room.id, "room_name": room.name, "total_hours": total_hours}
+            {
+                "room_id": r["room__id"],
+                "room_name": r["room__name"],
+                "total_hours": hours,
+            }
         )
 
     return result
