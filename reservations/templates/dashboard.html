@@ -58,99 +58,113 @@
         <canvas id="utilizationChart"></canvas>
     </div>
 
+    <div class="card">
+        <h2>Best performing room</h2>
+        <div class="inner_card">
+            <p id="best_room"></p>
+        </div>
+    </div>
+
 </body>
 
 <script>
 
+let hoursChart = null;
+let utilizationChart = null;
+
 function loadDashboard() {
 
-  const start = document.getElementById("start-date").value;
-  const end = document.getElementById("end-date").value;
+    const start = document.getElementById("start-date").value;
+    const end = document.getElementById("end-date").value;
 
-  fetch(`/api/dashboard/?start=${start}&end=${end}`)
-    .then(res => res.json())
-    .then(data => {
+    fetch(`/api/dashboard/?start=${start}&end=${end}`)
+        .then(res => res.json())
+        .then(data => {
 
-      // PERIOD
-      document.getElementById("start").textContent = data.period.start;
-      document.getElementById("end").textContent = data.period.end;
-      document.getElementById("days").textContent = data.period.days;
+    // PERIOD
+    document.getElementById("start").textContent = data.period.start;
+    document.getElementById("end").textContent = data.period.end;
+    document.getElementById("days").textContent = data.period.days;
 
-      // LIFECYCLE
-      document.getElementById("total").textContent =
-        data.metrics.lifecycle.total_reservations;
+    // LIFECYCLE
+    document.getElementById("total").textContent =
+    data.metrics.lifecycle.total_reservations;
 
-      document.getElementById("conversion").textContent =
-        data.metrics.lifecycle.conversion_rate;
+    document.getElementById("conversion").textContent =
+    data.metrics.lifecycle.conversion_rate;
 
-      document.getElementById("expiration").textContent =
-        data.metrics.lifecycle.expiration_rate;
+    document.getElementById("expiration").textContent =
+    data.metrics.lifecycle.expiration_rate;
 
-      // OCCUPANCY
-      document.getElementById("utilization").textContent =
-        data.metrics.occupancy.global_utilization_percentage;
+    // OCCUPANCY
+    document.getElementById("utilization").textContent =
+    data.metrics.occupancy.global_utilization_percentage;
 
-      // TOP ROOMS
-      const roomsList = document.getElementById("top-rooms");
-      roomsList.innerHTML = "";
+    // TOP ROOMS
+    const roomsList = document.getElementById("top-rooms");
+    roomsList.innerHTML = "";
 
-      data.metrics.occupancy.top_3_rooms.forEach(room => {
-        const li = document.createElement("li");
-        li.textContent = room.name;
-        roomsList.appendChild(li);
-      });
+    data.metrics.occupancy.top_3_rooms.forEach(room => {
+    const li = document.createElement("li");
+    li.textContent = room.name;
+    roomsList.appendChild(li);
+    });
 
-      // HOURS PER ROOM
-      const hoursList = document.getElementById("hours-per-room");
-      hoursList.innerHTML = "";
+    // HOURS PER ROOM
+    const hoursList = document.getElementById("hours-per-room");
+    hoursList.innerHTML = "";
 
-      data.metrics.rooms.total_hours_per_room.forEach(room => {
-        const li = document.createElement("li");
-        li.textContent = `${room.room_name}: ${room.total_hours} hours`;
-        hoursList.appendChild(li);
-      });
-      
-      // HOURS PER ROOM CHART
-      const roomNames = data.metrics.rooms.total_hours_per_room.map(r => r.room_name)
-      const roomHours = data.metrics.rooms.total_hours_per_room.map(r => r.total_hours)
+    data.metrics.rooms.total_hours_per_room.forEach(room => {
+    const li = document.createElement("li");
+    li.textContent = `${room.room_name}: ${room.total_hours} hours`;
+    hoursList.appendChild(li);
+    });
+    
+    // HOURS PER ROOM CHART
+    const roomNames = data.metrics.rooms.total_hours_per_room.map(r => r.room_name)
+    const roomHours = data.metrics.rooms.total_hours_per_room.map(r => r.total_hours)
 
-      if (hoursChart && typeof hoursChart.destroy === "function") {
-        hoursChart.destroy()
-      }
+    if (hoursChart && typeof hoursChart.destroy === "function") {
+    hoursChart.destroy()
+    }
 
-      const ctx1 = document.getElementById("hoursChart")
-      hoursChart = new Chart(ctx1, {
-        type: "bar",
-        data: {
-          labels: roomNames,
-          datasets: [{
-            label: "Hours",
-            data: roomHours,
-            backgroundColor: "rgba(75, 192, 192, 0.7)"
-          }]
-        }
-      })
+    const ctx1 = document.getElementById("hoursChart")
+    hoursChart = new Chart(ctx1, {
+    type: "bar",
+    data: {
+        labels: roomNames,
+        datasets: [{
+        label: "Hours",
+        data: roomHours,
+        backgroundColor: "rgba(75, 192, 192, 0.7)"
+        }]
+    }
+    })
 
-      // UTILIZATION PER ROOM
-      const utilNames = data.metrics.rooms.utilization_per_room.map(r => r.room_name)
-      const utilValues = data.metrics.rooms.utilization_per_room.map(r => r.utilization_percentage)
+    // UTILIZATION PER ROOM
+    const utilNames = data.metrics.rooms.utilization_per_room.map(r => r.room_name)
+    const utilValues = data.metrics.rooms.utilization_per_room.map(r => r.utilization_percentage)
 
-      if (utilizationChart && typeof utilizationChart.destroy === "function") {
-        utilizationChart.destroy()
-      }
+    if (utilizationChart && typeof utilizationChart.destroy === "function") {
+    utilizationChart.destroy()
+    }
 
-      const ctx2 = document.getElementById("utilizationChart")
-      utilizationChart = new Chart(ctx2, {
-        type: "bar",
-        data: {
-          labels: utilNames,
-          datasets: [{
-            label: "Utilization %",
-            data: utilValues,
-            backgroundColor: "#FF6384"
-          }]
-        }
-      })
+    const ctx2 = document.getElementById("utilizationChart")
+    utilizationChart = new Chart(ctx2, {
+    type: "bar",
+    data: {
+        labels: utilNames,
+        datasets: [{
+        label: "Utilization %",
+        data: utilValues,
+        backgroundColor: "#FF6384"
+        }]
+    }
+    })
+
+    // Best room
+    const bestRoom = data.metrics.rooms.best_performing_room;
+    document.getElementById("best_room").textContent = bestRoom ? `🥇 ${bestRoom.name}` : "N/A";
 
     });
 }

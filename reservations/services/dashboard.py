@@ -12,12 +12,14 @@ from reservations.services.ranking import (
     top_3_rooms,
     total_hours_per_room,
     utilization_percentage_per_room,
+    best_performing_room,
 )
 
 
 def dashboard_metrics(start_date, end_date):
 
     top_rooms = top_3_rooms(start_date, end_date)
+    best_room = best_performing_room(start_date, end_date)
 
     return {
         "period": {
@@ -35,7 +37,7 @@ def dashboard_metrics(start_date, end_date):
                 "room_heatmap": room_heatmap(start_date, end_date),
                 "top_3_rooms": [
                     {"id": room.id, "name": room.name} for room in top_rooms
-                ]
+                ],
             },
             "lifecycle": {
                 "total_reservations": total_reservations(start_date, end_date),
@@ -56,6 +58,7 @@ def dashboard_metrics(start_date, end_date):
                 "utilization_per_room": utilization_percentage_per_room(
                     start_date, end_date
                 ),
+                "best_performing_room": ({"id": best_room.id, "name": best_room.name} if best_room else None)
             },
         },
     }

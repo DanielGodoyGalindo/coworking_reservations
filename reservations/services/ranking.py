@@ -70,7 +70,6 @@ def best_performing_room(start_date, end_date):
     if not rooms_data:
         return None
 
-    # Ordenamos por tiempo total ocupado
     rooms_data.sort(key=lambda x: x[1], reverse=True)
     return rooms_data[0][0]
 
