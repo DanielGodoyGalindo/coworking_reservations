@@ -81,12 +81,16 @@ canvas {
     background: white;
     border-radius: 20px;
     border-color: #111827;
-    box-shadow: 0 10px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 10px 12px rgba(0, 0, 0, 0.05);
 }
 
 .inner_card {
     width: 40%;
-    margin: 0 auto; 
+    margin: 0 auto;
+}
+
+.inner_card_centered {
+    text-align: center;
 }
 
 .inner_card p span {
@@ -99,6 +103,11 @@ canvas {
     align-items: center;
 }
 
+#best_room {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
 
 
 
@@ -109,7 +118,7 @@ canvas {
         margin: auto;
     }
 
-    p {
+    .metric-row {
         display: flex;
         justify-content: space-between;
     }
