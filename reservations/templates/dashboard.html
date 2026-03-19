@@ -65,6 +65,14 @@
         </div>
     </div>
 
+    <div class="card">
+        <h2>Most used timeslot</h2>
+        <div class="inner_card">
+            <p>Hour: <span id="most_used_time_slot_hour"></span></p>
+            <p>Number of reservations: <span id="most_used_time_slot_reservations"></span></p>
+        </div>
+    </div>
+
 </body>
 
 <script>
@@ -166,7 +174,13 @@ function loadDashboard() {
     const bestRoom = data.metrics.rooms.best_performing_room;
     document.getElementById("best_room").textContent = bestRoom ? `🥇 ${bestRoom.name}` : "N/A";
 
+    // most_used_time_slot
+    document.getElementById("most_used_time_slot_hour").textContent = `${data.metrics.occupancy.most_used_time_slot.hour}h`;
+    document.getElementById("most_used_time_slot_reservations").textContent = data.metrics.occupancy.most_used_time_slot.reservations;
     });
+
+    // TODO
+    // room_heatmap
 }
 
 </script>
