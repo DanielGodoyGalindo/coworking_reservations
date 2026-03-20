@@ -108,7 +108,27 @@ canvas {
     font-weight: bold;
 }
 
+#heatmap {
+    display: grid;
+    grid-template-columns: 80px repeat(24, 1fr);
+    gap: 2px;
+    align-items: center;
+}
 
+.cell {
+    height: 25px;
+    font-size: 10px;
+    text-align: center;
+}
+
+.label {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.text-center {
+    text-align: center;
+}
 
 
 @media (min-width: 900px) {

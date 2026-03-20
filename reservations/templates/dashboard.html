@@ -73,6 +73,11 @@
         </div>
     </div>
 
+    <div class="card">
+        <h2>Heatmap</h2>
+        <div id="heatmap"></div>
+    </div>
+
 </body>
 
 <script>
@@ -177,10 +182,46 @@ function loadDashboard() {
     // most_used_time_slot
     document.getElementById("most_used_time_slot_hour").textContent = `${data.metrics.occupancy.most_used_time_slot.hour}h`;
     document.getElementById("most_used_time_slot_reservations").textContent = data.metrics.occupancy.most_used_time_slot.reservations;
-    });
-
-    // TODO
+    
     // room_heatmap
+    function renderHeatmap(data) {
+        const container = document.getElementById("heatmap");
+        container.innerHTML = "";
+
+        const days = Object.keys(data);
+
+        container.appendChild(document.createElement("div"));
+
+        for (let hour = 0; hour < 24; hour++) {
+            const hourLabel = document.createElement("div");
+            hourLabel.classList.add("label");
+            hourLabel.textContent = hour;
+            container.appendChild(hourLabel);
+        }
+
+        days.forEach(day => {
+
+            const dayLabel = document.createElement("div");
+            dayLabel.classList.add("label");
+            dayLabel.textContent = day.charAt(0).toUpperCase() + day.slice(1);
+            container.appendChild(dayLabel);
+            container.classList.add("text-center");
+
+            for (let hour = 0; hour < 24; hour++) {
+                const value = data[day][hour] || 0;
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                const intensity = Math.min(value * 60, 255);
+                cell.style.backgroundColor = `rgb(255, ${255 - intensity}, ${255 - intensity})`;
+                cell.title = `${day} ${hour}:00 → ${value}`;
+                container.appendChild(cell);
+            }
+        });
+    }
+
+    renderHeatmap(data.metrics.occupancy.room_heatmap);
+
+    });
 }
 
 </script>
