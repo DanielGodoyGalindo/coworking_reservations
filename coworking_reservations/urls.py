@@ -23,4 +23,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("reservations.api.urls")),
     path("dashboard/", dashboard_page, name="dashboard"),
+    path("dasboard2/", dashboard_page2, name="dashboard2"),
 ]

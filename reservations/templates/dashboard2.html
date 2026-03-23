@@ -1,0 +1,42 @@
+{% load static %}
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'reservations/dashboard.css' %}">
+</head>
+
+<body>
+    <div>
+        <h1>Global daily occupancy<h1>
+        
+            <div>
+                <span>Select date:</span>
+                <div>
+                    <input type="date" id="gdo_date">
+                    <button onclick="loadGlobalDailyOccupancy()">Load</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="inner_card">
+                    <p class="metric-row">Result: <span id="result"></span></p>
+                </div>
+            </div>
+    </div>
+</body>
+
+<script>
+    function loadGlobalDailyOccupancy() {
+        
+        const gdo_date = document.getElementById("gdo_date-date").value;
+        const url = "/api/dashboard2" 
+
+        const request = async (url) => {
+            const response = await fetch(url);
+            if (!response.ok)
+                throw new Error("WARN", response.status);
+            const data = await response.text();
+            return data;
+        }
+    }
+</script>
