@@ -26,17 +26,21 @@
 </body>
 
 <script>
-    function loadGlobalDailyOccupancy() {
+    async function loadGlobalDailyOccupancy() {
         
-        const gdo_date = document.getElementById("gdo_date-date").value;
-        const url = "/api/dashboard2" 
+        const gdo_date = document.getElementById("gdo_date").value;
+        const url = `/api/dashboard2/`;
 
-        const request = async (url) => {
+        try {
             const response = await fetch(url);
-            if (!response.ok)
-                throw new Error("WARN", response.status);
-            const data = await response.text();
-            return data;
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}`);
+            }
+            const data = await response.json();
+            console.log(data);
+            document.getElementById("result").textContent = data.message;
+        } catch (error) {
+            console.error("ERROR:", error);
         }
     }
 </script>

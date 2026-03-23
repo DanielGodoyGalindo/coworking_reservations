@@ -17,11 +17,11 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from reservations.views import dashboard_page
+from reservations.views import dashboard_page, dashboard_page2
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("reservations.api.urls")),
     path("dashboard/", dashboard_page, name="dashboard"),
-    path("dasboard2/", dashboard_page2, name="dashboard2"),
+    path("dashboard2/", dashboard_page2, name="dashboard2"),
 ]

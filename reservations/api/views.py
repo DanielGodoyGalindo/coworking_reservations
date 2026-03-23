@@ -236,9 +236,9 @@ class DashboardView(View):
         data = dashboard_metrics(start_date, end_date)
 
         return JsonResponse(data, safe=False)
-    
-    
+
+
 class DashboardView2(View):
     def get(self, request):
-        data = dashboard_metrics(start_date, end_date)
-        return JsonResponse(data, safe=False)
+        data = {"message": "Dashboard 2 data"}
+        return JsonResponse(data)
