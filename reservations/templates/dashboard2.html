@@ -19,7 +19,7 @@
 
             <div class="card">
                 <div class="inner_card">
-                    <p class="metric-row">Result: <span id="result"></span></p>
+                    <p class="metric-row">Result: <span id="gdo_result"></span></p>
                 </div>
             </div>
     </div>
@@ -29,16 +29,12 @@
     async function loadGlobalDailyOccupancy() {
         
         const gdo_date = document.getElementById("gdo_date").value;
-        const url = `/api/dashboard2/`;
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}`);
-            }
-            const data = await response.json();
+            const res = await fetch(`/api/dashboard2/global-daily-occupancy/?date=${gdo_date}`);
+            const data = await res.json();
             console.log(data);
-            document.getElementById("result").textContent = data.message;
+            document.getElementById("gdo_result").textContent = data.occupancy;
         } catch (error) {
             console.error("ERROR:", error);
         }

@@ -4,6 +4,7 @@ from django.views.decorators.http import require_GET
 from django.shortcuts import get_object_or_404
 from datetime import date as date_type, datetime
 from reservations.services.dashboard import dashboard_metrics
+from reservations.services.occupancy import global_daily_occupancy
 from rooms.models import Room
 from reservations.services.reservations import (
     confirm_reservation,
@@ -20,6 +21,9 @@ from reservations.models import Reservation
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from datetime import datetime
 
 
 @require_GET
@@ -238,7 +242,19 @@ class DashboardView(View):
         return JsonResponse(data, safe=False)
 
 
-class DashboardView2(View):
+class GlobalDailyOccupancyView(APIView):
     def get(self, request):
-        data = {"message": "Dashboard 2 data"}
-        return JsonResponse(data)
+        date_str = request.GET.get("date")
+        if not date_str:
+            return JsonResponse({"error": "Missing date"}, status=400)
+
+        try:
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return JsonResponse({"error": "Invalid date format"}, status=400)
+
+        result = global_daily_occupancy(date)
+
+        return JsonResponse({
+            "occupancy": result
+        })

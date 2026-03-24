@@ -93,8 +93,13 @@ Then type:
 > Room.objects.all()
 
 **Simple Dashboard created**
-Run server then:
+This dashboard displays all services that accept start and end date parameters.
+Run server, then:
 > http://127.0.0.1:8000/dashboard
 
 **Add Charts.js script in Dashboard**
 https://www.chartjs.org/docs/latest/getting-started/
+
+**Dashboard2 created**
+This dashboard displays the rest of the services.
+> http://127.0.0.1:8000/dashboard2
