@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from datetime import date as date_type, datetime
 from reservations.services.dashboard import dashboard_metrics
 from reservations.services.occupancy import global_daily_occupancy
+from reservations.services.ranking import rooms_monthly_ranking
 from rooms.models import Room
 from reservations.services.reservations import (
     confirm_reservation,
@@ -247,14 +248,24 @@ class GlobalDailyOccupancyView(APIView):
         date_str = request.GET.get("date")
         if not date_str:
             return JsonResponse({"error": "Missing date"}, status=400)
-
         try:
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
             return JsonResponse({"error": "Invalid date format"}, status=400)
-
         result = global_daily_occupancy(date)
+        return JsonResponse({"occupancy": result})
 
-        return JsonResponse({
-            "occupancy": result
-        })
+
+class roomsMonthlyRankingView(APIView):
+    def get(self, r):
+        month = r.GET.get("month")
+        year = r.GET.get("year")
+        if not month or not year:
+            return JsonResponse({"error": "Missing year or month"}, status=400)
+        try:
+            month = int(month)
+            year = int(year)
+        except ValueError:
+            return JsonResponse({"error": "Invalid month or year"}, status=400)
+        result = rooms_monthly_ranking(year, month)
+        return JsonResponse({"ranking": result})

@@ -9,6 +9,7 @@ from .views import (
     list_reservations_view,
     DashboardView,
     GlobalDailyOccupancyView,
+    roomsMonthlyRankingView,
 )
 
 urlpatterns = [
@@ -22,5 +23,10 @@ urlpatterns = [
         "dashboard2/global-daily-occupancy/",
         GlobalDailyOccupancyView.as_view(),
         name="global-daily-occupancy",
+    ),
+    path(
+        "dashboard2/rooms-monthly-ranking/",
+        roomsMonthlyRankingView.as_view(),
+        name="rooms-monthly-ranking",
     ),
 ]

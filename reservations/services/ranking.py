@@ -39,7 +39,7 @@ def rooms_monthly_ranking(year, month):
         )
         occupancy = total_seconds / available_per_room if available_per_room > 0 else 0
 
-        ranking.append({"room": room, "occupancy": occupancy})
+        ranking.append({"room_id": room.id, "room_name":room.name, "occupancy": round(occupancy, 3)})
 
     ranking.sort(key=lambda x: x["occupancy"], reverse=True)
     return ranking

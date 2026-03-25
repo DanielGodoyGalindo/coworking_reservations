@@ -17,7 +17,6 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from reservations.api.views import GlobalDailyOccupancyView
 from reservations.views import dashboard2_view, dashboard_page
 
 urlpatterns = [
