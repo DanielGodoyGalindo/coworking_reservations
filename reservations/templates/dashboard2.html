@@ -41,6 +41,31 @@
     </div>
 </body>
 
+{% comment %} monthlyOccupancyRate {% endcomment %}
+    <div>
+        <h1>Monthly occupancy rate</h1>
+            <div>
+                <label for="mor_room">Room:</label>
+                <select id="mor_room" name="mor_room">
+                    <option value="">-- Select a room --</option>
+                    {% for room in rooms %}
+                        <option value="{{ room.id }}">{{ room.name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="mor_month">Month:</label>
+                <input type="number" max="12" min="1" value="1"  step="1" id="mor_month" name="mor_month">
+                <label for="mor_year">Year:</label>
+                <input type="number" max="2099" min="2000" value="2026"  step="1" id="mor_year" name="mor_year">
+                <button onclick="loadMonthlyOccupancyRate()">Load</button>
+            </div>
+            <div class="card">
+                <div class="inner_card">
+                    <p class="metric-row">Result: <span id="mor_result"></span></p>
+                </div>
+            </div>
+    </div>
+
+
 <script>
     async function loadGlobalDailyOccupancy() {
         

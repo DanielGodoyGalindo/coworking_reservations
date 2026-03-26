@@ -4,7 +4,10 @@ from django.views.decorators.http import require_GET
 from django.shortcuts import get_object_or_404
 from datetime import date as date_type, datetime
 from reservations.services.dashboard import dashboard_metrics
-from reservations.services.occupancy import global_daily_occupancy
+from reservations.services.occupancy import (
+    global_daily_occupancy,
+    monthly_occupancy_rate,
+)
 from reservations.services.ranking import rooms_monthly_ranking
 from rooms.models import Room
 from reservations.services.reservations import (
@@ -269,3 +272,29 @@ class roomsMonthlyRankingView(APIView):
             return JsonResponse({"error": "Invalid month or year"}, status=400)
         result = rooms_monthly_ranking(year, month)
         return JsonResponse({"ranking": result})
+
+
+class monthlyOccupancyRate(APIView):
+    def get(self, req):
+        room_id = req.GET.get("room_id")
+        year = req.GET.get("year")
+        month = req.GET.get("month")
+        if not room_id or not year or not month:
+            return JsonResponse(
+                {"error": "Missing room id or year or month"}, status=400
+            )
+        try:
+            year = int(year)
+            month = int(month)
+            room_id = int(room_id)
+        except ValueError:
+            return JsonResponse(
+                {"error": "Invalid room id or year or month"}, status=400
+            )
+        result = monthly_occupancy_rate(room_id, year, month)
+        return JsonResponse({"occupancy": result})
+
+
+# occupancy --> global_monthly_occupancy(year, month)
+# occupancy --> global_daily_occupancy(date)
+# occupancy --> peak_day(year, month)

@@ -13,6 +13,7 @@ User = get_user_model()
 class ReservationMetricsTest(TestCase):
     def setUp(self):
         self.room = Room.objects.create(
+            id=1,
             name="Sala Pong",
             max_capacity=10,
         )
@@ -33,7 +34,7 @@ class ReservationMetricsTest(TestCase):
             status=Reservation.Status.CONFIRMED,
         )
 
-        rate = monthly_occupancy_rate(self.room, 2026, 3)
+        rate = monthly_occupancy_rate(self.room.id, 2026, 3)
         print("OCCUPANCY RATE:", rate)
 
         self.assertGreater(rate, 0)

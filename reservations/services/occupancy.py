@@ -46,7 +46,7 @@ def occupancy_rate(room, date):
     return occupied_seconds / total_available_seconds
 
 
-def monthly_occupancy_rate(room, year, month):
+def monthly_occupancy_rate(room_id, year, month):
 
     OPENING_HOUR = time(settings.COWORKING_OPENING_HOUR)
     CLOSING_HOUR = time(settings.COWORKING_CLOSING_HOUR)
@@ -72,7 +72,7 @@ def monthly_occupancy_rate(room, year, month):
 
     reservations = (
         Reservation.objects.filter(
-            room=room,
+            room=room_id,
             date__range=(start_date, end_date),
             status=Reservation.Status.CONFIRMED,
         )
@@ -84,14 +84,11 @@ def monthly_occupancy_rate(room, year, month):
         )
         .aggregate(total=Sum("duration"))
     )
-
     occupied_seconds = (
         reservations["total"].total_seconds() if reservations["total"] else 0
     )
-
     if total_available_seconds == 0:
         return 0
-
     return occupied_seconds / total_available_seconds
 
 
