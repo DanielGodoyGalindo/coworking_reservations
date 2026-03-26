@@ -99,4 +99,18 @@
             console.error("ERROR:", e);
         }
     }
+
+    async function loadMonthlyOccupancyRate() {
+        const room_id = document.getElementById("mor_room").value;
+        const month = document.getElementById("mor_month").value;
+        const year = document.getElementById("mor_year").value;
+        try {
+            const resp = await fetch(`/api/dashboard2/monthly-occupancy-rate/?room_id=${room_id}&month=${month}&year=${year}`);
+            const data = await resp.json();
+            console.log(data)
+            document.getElementById("mor_result").textContent = data.occupancy
+        } catch (e) {
+            console.error(e)
+        }
+    }
 </script>

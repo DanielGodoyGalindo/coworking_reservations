@@ -89,7 +89,7 @@ def monthly_occupancy_rate(room_id, year, month):
     )
     if total_available_seconds == 0:
         return 0
-    return occupied_seconds / total_available_seconds
+    return round(occupied_seconds / total_available_seconds, 3)
 
 
 def global_monthly_occupancy(year, month):

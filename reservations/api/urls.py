@@ -9,6 +9,7 @@ from .views import (
     list_reservations_view,
     DashboardView,
     GlobalDailyOccupancyView,
+    monthlyOccupancyRate,
     roomsMonthlyRankingView,
 )
 
@@ -29,4 +30,7 @@ urlpatterns = [
         roomsMonthlyRankingView.as_view(),
         name="rooms-monthly-ranking",
     ),
+    path("dashboard2/monthly-occupancy-rate/",
+         monthlyOccupancyRate.as_view(),
+         name="monthly-occupancy-rate"),
 ]
