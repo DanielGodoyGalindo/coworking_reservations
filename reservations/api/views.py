@@ -6,6 +6,7 @@ from datetime import date as date_type, datetime
 from reservations.services.dashboard import dashboard_metrics
 from reservations.services.occupancy import (
     global_daily_occupancy,
+    global_monthly_occupancy,
     monthly_occupancy_rate,
 )
 from reservations.services.ranking import rooms_monthly_ranking
@@ -35,22 +36,16 @@ def availability_view(request):
 
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required"}, status=401)
-
     room_id = request.GET.get("room_id")
     date_str = request.GET.get("date")
-
     if not room_id or not date_str:
         error_response("room_id and date are required", 400)
-
     try:
         date = date_type.fromisoformat(date_str)
     except ValueError:
         error_response("Invalid date format (YYYY-MM-DD)", 400)
-
     room = get_object_or_404(Room, id=room_id)
-
     slots = get_available_slots(room=room, date=date)
-
     return JsonResponse(
         {
             "room_id": room.id,
@@ -73,33 +68,25 @@ def create_reservation_view(request):
 
     if not request.user.is_authenticated:
         error_response("Authentication required", 401)
-
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return error_response("Invalid JSON", 400)
-
     required_fields = {"room_id", "date", "start_time", "end_time"}
     if not required_fields.issubset(data):
         return error_response("Missing required fields", 400)
-
     try:
         date = date_type.fromisoformat(data["date"])
         start_time = time_type.fromisoformat(data["start_time"])
         end_time = time_type.fromisoformat(data["end_time"])
     except ValueError:
         return error_response("Invalid date or time format", 400)
-
     if start_time >= end_time:
         return error_response("start_time must be before end_time", 400)
-
     room = get_object_or_404(Room, id=data["room_id"])
-
     idempotency_key = request.headers.get("Idempotency-Key")
-
     if not idempotency_key:
         return error_response("Idempotency-Key header required", 400)
-
     try:
         reservation = create_reservation(
             idempotency_key=idempotency_key,
@@ -111,10 +98,8 @@ def create_reservation_view(request):
         )
     except ReservationOverlapError as e:
         return error_response(str(e), 409)
-
     except ValueError as e:
         return error_response(str(e), 400)
-
     return JsonResponse(
         {
             "id": reservation.id,
@@ -133,7 +118,6 @@ def list_reservations_view(request):
 
     if not request.user.is_authenticated:
         return error_response("Authentication required", 401)
-
     # Only get reservations from authenticated user, only rooms related to user, and order by date
     # filter ==> select reservations where user = authenticated user
     # select_related ==> get reservations that has ForeignKey relationship
@@ -143,7 +127,6 @@ def list_reservations_view(request):
         .select_related("room")
         .order_by("date", "start_time")
     )
-
     data = [
         {
             "id": r.id,
@@ -156,59 +139,43 @@ def list_reservations_view(request):
         }
         for r in reservations
     ]
-
     return JsonResponse({"reservations": data})
 
 
 @require_http_methods(["DELETE"])
 def delete_reservation_view(request, reservation_id):
-
     if not request.user.is_authenticated:
         return error_response("Authentication required", 401)
-
     reservation = get_object_or_404(Reservation, id=reservation_id)
-
     if reservation.user != request.user:
         return error_response("Delete action forbidden", 403)
-
     if reservation.status == Reservation.Status.CANCELLED:
         return error_response("Reservation already cancelled", 400)
-
     if reservation.date < date_type.today():
         return error_response("Cannot cancel past reservations", 400)
-
     # hard delete
     # reservation.delete()
-
     # soft delete
     reservation.status = Reservation.Status.CANCELLED
     reservation.save()
-
     return JsonResponse({"message": "Reservation deleted"}, status=200)
 
 
 def confirm_reservation_view(request, reservation_id):
-
     if not request.user.is_authenticated:
         return error_response("Authentication required", 401)
-
     reservation = get_object_or_404(Reservation, id=reservation_id)
-
     try:
         reservation = confirm_reservation(
             reservation=reservation,
             user=request.user,
         )
-
     except PermissionDenied as e:
         return error_response(str(e), 403)
-
     except ReservationOverlapError as e:
         return error_response(str(e), 409)
-
     except ReservationConfirmationError as e:
         return error_response(str(e), 400)
-
     return JsonResponse(
         {
             "id": reservation.id,
@@ -224,15 +191,12 @@ def error_response(message, status_code):
 
 class DashboardView(View):
     def get(self, request):
-
         start_str = request.GET.get("start")
         end_str = request.GET.get("end")
-
         if not start_str or not end_str:
             return JsonResponse(
                 {"error": "start and end parameters are required"}, status=400
             )
-
         try:
             start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
             end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
@@ -240,9 +204,7 @@ class DashboardView(View):
             return JsonResponse(
                 {"error": "Invalid date format. Use YYYY-MM-DD"}, status=400
             )
-
         data = dashboard_metrics(start_date, end_date)
-
         return JsonResponse(data, safe=False)
 
 
@@ -296,5 +258,22 @@ class monthlyOccupancyRate(APIView):
 
 
 # occupancy --> global_monthly_occupancy(year, month)
+
+
+class globalMonthlyOccupancy(APIView):
+    def get(self, request):
+        year = request.GET.get("year")
+        month = request.GET.get("month")
+        if not year or not month:
+            return JsonResponse({"error": "Missing year or month dates"}, status=400)
+        try:
+            month = int(month)
+            year = int(year)
+        except ValueError:
+            return JsonResponse({"error": "Invalid year or month values"}, status=400)
+        result = global_monthly_occupancy(year, month)
+        return JsonResponse({"occupancy": result})
+
+
 # occupancy --> global_daily_occupancy(date)
 # occupancy --> peak_day(year, month)

@@ -6,6 +6,7 @@ from .views import (
     confirm_reservation_view,
     create_reservation_view,
     delete_reservation_view,
+    globalMonthlyOccupancy,
     list_reservations_view,
     DashboardView,
     GlobalDailyOccupancyView,
@@ -30,7 +31,14 @@ urlpatterns = [
         roomsMonthlyRankingView.as_view(),
         name="rooms-monthly-ranking",
     ),
-    path("dashboard2/monthly-occupancy-rate/",
-         monthlyOccupancyRate.as_view(),
-         name="monthly-occupancy-rate"),
+    path(
+        "dashboard2/monthly-occupancy-rate/",
+        monthlyOccupancyRate.as_view(),
+        name="monthly-occupancy-rate",
+    ),
+    path(
+        "dashboard2/global-monthly-occupancy/",
+        globalMonthlyOccupancy.as_view(),
+        name="global-monthly-occupancy",
+    ),
 ]

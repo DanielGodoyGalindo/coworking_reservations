@@ -6,21 +6,22 @@
 </head>
 
 <body>
+    <h1 class="text-center">Dashboard 2</h1>
     {% comment %} Global daily occupancy {% endcomment %}
     <div>
-        <h1>Global daily occupancy<h1>
+        <h1>Global daily occupancy</h1>
+        <div>
+            <span>Select date:</span>
             <div>
-                <span>Select date:</span>
-                <div>
-                    <input type="date" id="gdo_date">
-                    <button onclick="loadGlobalDailyOccupancy()">Load</button>
-                </div>
+                <input type="date" id="gdo_date">
+                <button onclick="loadGlobalDailyOccupancy()">Load</button>
             </div>
-            <div class="card">
-                <div class="inner_card">
-                    <p class="metric-row">Result: <span id="gdo_result"></span></p>
-                </div>
+        </div>
+        <div class="card">
+            <div class="inner_card">
+                <p class="metric-row">Result: <span id="gdo_result"></span></p>
             </div>
+        </div>
     </div>
 
     {% comment %} Rooms monthly ranking {% endcomment %}
@@ -39,10 +40,10 @@
                 </div>
             </div>
     </div>
-</body>
+
 
 {% comment %} monthlyOccupancyRate {% endcomment %}
-    <div>
+    <div> 
         <h1>Monthly occupancy rate</h1>
             <div>
                 <label for="mor_room">Room:</label>
@@ -65,6 +66,24 @@
             </div>
     </div>
 
+{% comment %} Global monthly occupancy rate {% endcomment %}
+    <div>
+        <h1>Global monthly occupancy</h1>
+            <div>
+                <label for="gmo_month">Month:</label>
+                <input type="number" max="12" min="1" value="1"  step="1" id="gmo_month" name="gmo_month">
+                <label for="gmo_year">Year:</label>
+                <input type="number" max="2099" min="2000" value="2026"  step="1" id="gmo_year" name="gmo_year">
+                <button onclick="loadGlobalMonthlyOccupancy()">Load</button>
+            </div>
+            <div class="card">
+                <div class="inner_card">
+                    <p class="metric-row">Result: <span id="gmo_result"></span></p>
+                </div>
+            </div>
+    </div>
+
+</body>
 
 <script>
     async function loadGlobalDailyOccupancy() {
@@ -109,6 +128,20 @@
             const data = await resp.json();
             console.log(data)
             document.getElementById("mor_result").textContent = data.occupancy
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    async function loadGlobalMonthlyOccupancy() {
+        // TODO
+        const month = document.getElementById("gmo_month").value;
+        const year = document.getElementById("gmo_year").value;
+        try {
+            const response = await fetch(`/api/dashboard2/global-monthly-occupancy/?month=${month}&year=${year}`);
+            const data = await response.json();
+            console.log(data)
+            document.getElementById("gmo_result").textContent = data.occupancy
         } catch (e) {
             console.error(e)
         }
