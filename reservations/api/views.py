@@ -8,6 +8,7 @@ from reservations.services.occupancy import (
     global_daily_occupancy,
     global_monthly_occupancy,
     monthly_occupancy_rate,
+    peak_day,
 )
 from reservations.services.ranking import rooms_monthly_ranking
 from rooms.models import Room
@@ -257,9 +258,6 @@ class monthlyOccupancyRate(APIView):
         return JsonResponse({"occupancy": result})
 
 
-# occupancy --> global_monthly_occupancy(year, month)
-
-
 class globalMonthlyOccupancy(APIView):
     def get(self, request):
         year = request.GET.get("year")
@@ -275,5 +273,21 @@ class globalMonthlyOccupancy(APIView):
         return JsonResponse({"occupancy": result})
 
 
-# occupancy --> global_daily_occupancy(date)
-# occupancy --> peak_day(year, month)
+class peakDay(APIView):
+    def get(self, req):
+        year = req.GET.get("year")
+        month = req.GET.get("month")
+        if not year or not month:
+            return JsonResponse({"error": "Missing year or month dates"}, status=400)
+        try:
+            month = int(month)
+            year = int(year)
+        except ValueError:
+            return JsonResponse({"error": "Invalid year or month values"}, status=400)
+        result = peak_day(year, month)
+        return JsonResponse(
+            {
+                "date": result["date"].isoformat(),
+                "occupancy": result["occupancy_rate"],
+            }
+        )

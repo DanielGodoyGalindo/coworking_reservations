@@ -11,6 +11,7 @@ from .views import (
     DashboardView,
     GlobalDailyOccupancyView,
     monthlyOccupancyRate,
+    peakDay,
     roomsMonthlyRankingView,
 )
 
@@ -41,4 +42,5 @@ urlpatterns = [
         globalMonthlyOccupancy.as_view(),
         name="global-monthly-occupancy",
     ),
+    path("dashboard2/peak-day/", peakDay.as_view(), name="peak-day"),
 ]
