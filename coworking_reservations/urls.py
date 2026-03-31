@@ -18,10 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from reservations.views import dashboard2_view, dashboard_page
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("reservations.api.urls")),
     path("dashboard/", dashboard_page, name="dashboard"),
-    path("dashboard2/", dashboard2_view)
+    path("dashboard2/", dashboard2_view),
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]

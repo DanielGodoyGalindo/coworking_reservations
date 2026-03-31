@@ -120,6 +120,8 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
+LOGIN_REDIRECT_URL = '/dashboard/'
 
+# Global variables
 COWORKING_OPENING_HOUR = 8
 COWORKING_CLOSING_HOUR = 18
