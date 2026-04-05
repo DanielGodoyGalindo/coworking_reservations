@@ -8,6 +8,11 @@
     <h1>Dashboard</h1>
 
     <div>
+        <p>Welcome, {{user.username}}</p>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">Cerrar sesión</button>
+        </form>
         <span>Select dates:</span>
         <div>
             <input type="date" id="start-date">
