@@ -1,4 +1,7 @@
+{% extends 'base.html' %}
 {% load static %}
+
+{% block content %}
 
 <head>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -10,7 +13,7 @@
     {% comment %} Global daily occupancy {% endcomment %}
     <div>
         <h1>Global daily occupancy</h1>
-        <div>
+        <div style="padding-bottom:30px;">
             <span>Select date:</span>
             <div>
                 <input type="date" id="gdo_date">
@@ -176,3 +179,5 @@
         }
     }
 </script>
+
+{% endblock %}

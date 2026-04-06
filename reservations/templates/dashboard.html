@@ -1,18 +1,15 @@
+{% extends 'base.html' %}
 {% load static %}
 
+{% block content %}
 <head>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'reservations/dashboard.css' %}">
 </head>
 <body>
-    <h1>Dashboard</h1>
+    <h1 class="text-center">Dashboard</h1>
 
-    <div>
-        <p>Welcome, {{user.username}}</p>
-        <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit">Cerrar sesión</button>
-        </form>
+    <div style="padding-bottom:30px;">
         <span>Select dates:</span>
         <div>
             <input type="date" id="start-date">
@@ -230,3 +227,5 @@ function loadDashboard() {
 }
 
 </script>
+
+{% endblock %}
