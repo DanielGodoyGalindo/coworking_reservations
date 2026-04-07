@@ -1,60 +1,62 @@
+{% load static %}
+
 <html>
-<head>
-    <title>Co-working Reservations *** Dashboards</title>
+  <head>
+    <title>Co-Working Reservations - Dashboards</title>
+    <link rel="stylesheet" href="{% static 'reservations/dashboard.css' %}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .navbar {
-            background-color: #333 !important;
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar a,
-        .navbar button {
-            color: white;
-            text-decoration: none;
-            margin-left: 15px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .navbar a:hover,
-        .navbar button:hover {
-            text-decoration: underline;
-        }
+      .navbar {
+        background: linear-gradient(135deg, #1e293b, #334155) !important;
+        color: white;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .navbar a,
+      .navbar button {
+        color: white;
+        text-decoration: none;
+        margin-left: 15px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      
+      .navbar a:hover,
+      .navbar button:hover {
+        text-decoration: underline;
+      }
     </style>
-</head>
-<body>
-
-<div class="navbar">
-    <div>
+  </head>
+  <body>
+    <div class="navbar">
+      <div>
         <a href="{% url 'dashboard' %}">Dashboard</a>
         <a href="{% url 'dashboard2' %}">Dashboard 2</a>
+      </div>
 
-    </div>
-
-    <div>
+      <div>
         {% if user.is_authenticated %}
-            <span>👤 {{ user.username }}</span>
+          <span>👤 {{ user.username }}</span>
 
-            <form method="post" action="{% url 'logout' %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit">Logout</button>
-            </form>
+          <form method="post" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+          </form>
         {% else %}
-            <a href="{% url 'login' %}">Login</a>
+          <a href="{% url 'login' %}">Login</a>
         {% endif %}
+      </div>
     </div>
-</div>
 
-<div style="padding: 20px;">
-    {% block content %}
-    {% endblock %}
-</div>
+    <div style="padding: 20px;">
+      {% block content %}
 
-</body>
+      {% endblock %}
+    </div>
+  </body>
 </html>

@@ -2,182 +2,178 @@
 {% load static %}
 
 {% block content %}
+  <h1 class="text-center">Dashboard 2</h1>
+  {% comment %}Global daily occupancy{% endcomment %}
+  <div>
+    <h1>Global daily occupancy</h1>
+    <div style="padding-bottom:30px;">
+      <span>Select date:</span>
+      <div>
+        <input type="date" id="gdo_date" />
+        <button onclick="loadGlobalDailyOccupancy()">Load</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="inner_card">
+        <p class="metric-row">
+          Result: <span id="gdo_result"></span>
+        </p>
+      </div>
+    </div>
+  </div>
 
-<head>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="{% static 'reservations/dashboard.css' %}">
-</head>
-
-<body>
-    <h1 class="text-center">Dashboard 2</h1>
-    {% comment %} Global daily occupancy {% endcomment %}
+  {% comment %}Rooms monthly ranking{% endcomment %}
+  <div>
+    <h1>Rooms monthly ranking</h1>
     <div>
-        <h1>Global daily occupancy</h1>
-        <div style="padding-bottom:30px;">
-            <span>Select date:</span>
-            <div>
-                <input type="date" id="gdo_date">
-                <button onclick="loadGlobalDailyOccupancy()">Load</button>
-            </div>
-        </div>
-        <div class="card">
-            <div class="inner_card">
-                <p class="metric-row">Result: <span id="gdo_result"></span></p>
-            </div>
-        </div>
+      <label for="rmr_month">Month:</label>
+      <input type="number" max="12" min="1" value="1" step="1" id="rmr_month" name="rmr_month" />
+      <label for="rmr_year">Year:</label>
+      <input type="number" max="2099" min="2000" value="2026" step="1" id="rmr_year" name="rmr_year" />
+      <button onclick="loadRoomsMonthlyRanking()">Load</button>
     </div>
+    <div class="card">
+      <div class="inner_card">
+        <p class="metric-row">
+          Result: <span id="rmr_result"></span>
+        </p>
+      </div>
+    </div>
+  </div>
 
-    {% comment %} Rooms monthly ranking {% endcomment %}
+  {% comment %}monthlyOccupancyRate{% endcomment %}
+  <div>
+    <h1>Monthly occupancy rate</h1>
     <div>
-        <h1>Rooms monthly ranking</h1>
-            <div>
-                <label for="rmr_month">Month:</label>
-                <input type="number" max="12" min="1" value="1" step="1" id="rmr_month" name="rmr_month">
-                <label for="rmr_year">Year:</label>
-                <input type="number" max="2099" min="2000" value="2026"  step="1" id="rmr_year" name="rmr_year">
-                <button onclick="loadRoomsMonthlyRanking()">Load</button>
-            </div>
-            <div class="card">
-                <div class="inner_card">
-                    <p class="metric-row">Result: <span id="rmr_result"></span></p>
-                </div>
-            </div>
+      <label for="mor_room">Room:</label>
+      <select id="mor_room" name="mor_room">
+        <option value="">-- Select a room --</option>
+        {% for room in rooms %}
+          <option value="{{ room.id }}">{{ room.name }}</option>
+        {% endfor %}
+      </select>
+      <label for="mor_month">Month:</label>
+      <input type="number" max="12" min="1" value="1" step="1" id="mor_month" name="mor_month" />
+      <label for="mor_year">Year:</label>
+      <input type="number" max="2099" min="2000" value="2026" step="1" id="mor_year" name="mor_year" />
+      <button onclick="loadMonthlyOccupancyRate()">Load</button>
     </div>
-
-
-{% comment %} monthlyOccupancyRate {% endcomment %}
-    <div> 
-        <h1>Monthly occupancy rate</h1>
-            <div>
-                <label for="mor_room">Room:</label>
-                <select id="mor_room" name="mor_room">
-                    <option value="">-- Select a room --</option>
-                    {% for room in rooms %}
-                        <option value="{{ room.id }}">{{ room.name }}</option>
-                    {% endfor %}
-                </select>
-                <label for="mor_month">Month:</label>
-                <input type="number" max="12" min="1" value="1"  step="1" id="mor_month" name="mor_month">
-                <label for="mor_year">Year:</label>
-                <input type="number" max="2099" min="2000" value="2026"  step="1" id="mor_year" name="mor_year">
-                <button onclick="loadMonthlyOccupancyRate()">Load</button>
-            </div>
-            <div class="card">
-                <div class="inner_card">
-                    <p class="metric-row">Result: <span id="mor_result"></span></p>
-                </div>
-            </div>
+    <div class="card">
+      <div class="inner_card">
+        <p class="metric-row">
+          Result: <span id="mor_result"></span>
+        </p>
+      </div>
     </div>
+  </div>
 
-{% comment %} Global monthly occupancy rate {% endcomment %}
+  {% comment %}Global monthly occupancy rate{% endcomment %}
+  <div>
+    <h1>Global monthly occupancy</h1>
     <div>
-        <h1>Global monthly occupancy</h1>
-            <div>
-                <label for="gmo_month">Month:</label>
-                <input type="number" max="12" min="1" value="1"  step="1" id="gmo_month" name="gmo_month">
-                <label for="gmo_year">Year:</label>
-                <input type="number" max="2099" min="2000" value="2026"  step="1" id="gmo_year" name="gmo_year">
-                <button onclick="loadGlobalMonthlyOccupancy()">Load</button>
-            </div>
-            <div class="card">
-                <div class="inner_card">
-                    <p class="metric-row">Result: <span id="gmo_result"></span></p>
-                </div>
-            </div>
+      <label for="gmo_month">Month:</label>
+      <input type="number" max="12" min="1" value="1" step="1" id="gmo_month" name="gmo_month" />
+      <label for="gmo_year">Year:</label>
+      <input type="number" max="2099" min="2000" value="2026" step="1" id="gmo_year" name="gmo_year" />
+      <button onclick="loadGlobalMonthlyOccupancy()">Load</button>
     </div>
+    <div class="card">
+      <div class="inner_card">
+        <p class="metric-row">
+          Result: <span id="gmo_result"></span>
+        </p>
+      </div>
+    </div>
+  </div>
 
-    {% comment %} Peak day {% endcomment %}
+  {% comment %}Peak day{% endcomment %}
+  <div>
+    <h1>Peak day</h1>
     <div>
-        <h1>Peak day</h1>
-            <div>
-                <label for="pd_month">Month:</label>
-                <input type="number" max="12" min="1" value="1"  step="1" id="pd_month" name="pd_month">
-                <label for="pd_year">Year:</label>
-                <input type="number" max="2099" min="2000" value="2026"  step="1" id="pd_year" name="pd_year">
-                <button onclick="loadPeakDayOccupnacy()">Load</button>
-            </div>
-            <div class="card">
-                <div class="inner_card">
-                    <p class="metric-row">Result: <span id="pd_result"></span></p>
-                </div>
-            </div>
+      <label for="pd_month">Month:</label>
+      <input type="number" max="12" min="1" value="1" step="1" id="pd_month" name="pd_month" />
+      <label for="pd_year">Year:</label>
+      <input type="number" max="2099" min="2000" value="2026" step="1" id="pd_year" name="pd_year" />
+      <button onclick="loadPeakDayOccupnacy()">Load</button>
     </div>
+    <div class="card">
+      <div class="inner_card">
+        <p class="metric-row">
+          Result: <span id="pd_result"></span>
+        </p>
+      </div>
+    </div>
+  </div>
 
-</body>
-
-<script>
+  <script>
     async function loadGlobalDailyOccupancy() {
-        
-        const gdo_date = document.getElementById("gdo_date").value;
-
-        try {
-            const res = await fetch(`/api/dashboard2/global-daily-occupancy/?date=${gdo_date}`);
-            const data = await res.json();
-            console.log(data);
-            document.getElementById("gdo_result").textContent = data.occupancy;
-        } catch (error) {
-            console.error("ERROR:", error);
-        }
+      const gdo_date = document.getElementById('gdo_date').value
+    
+      try {
+        const res = await fetch(`/api/dashboard2/global-daily-occupancy/?date=${gdo_date}`)
+        const data = await res.json()
+        console.log(data)
+        document.getElementById('gdo_result').textContent = data.occupancy
+      } catch (error) {
+        console.error('ERROR:', error)
+      }
     }
-
+    
     async function loadRoomsMonthlyRanking() {
-        const rmr_month = document.getElementById("rmr_month").value;
-        const rmr_year = document.getElementById("rmr_year").value;
-        try {
-            const response = await fetch(`/api/dashboard2/rooms-monthly-ranking/?month=${rmr_month}&year=${rmr_year}`);
-            const data = await response.json();
-            console.log(data)
-            const result = document.getElementById("rmr_result");
-            result.innerHTML = `
-                <ul>
-                    ${data.ranking
-                        .map(r => `<li>${r.room_name}: ${r.occupancy}</li>`)
-                        .join("")}
-                </ul>`;
-        } catch (e) {
-            console.error("ERROR:", e);
-        }
+      const rmr_month = document.getElementById('rmr_month').value
+      const rmr_year = document.getElementById('rmr_year').value
+      try {
+        const response = await fetch(`/api/dashboard2/rooms-monthly-ranking/?month=${rmr_month}&year=${rmr_year}`)
+        const data = await response.json()
+        console.log(data)
+        const result = document.getElementById('rmr_result')
+        result.innerHTML = `
+                    <ul>
+                        ${data.ranking.map((r) => `<li>${r.room_name}: ${r.occupancy}</li>`).join('')}
+                    </ul>`
+      } catch (e) {
+        console.error('ERROR:', e)
+      }
     }
-
+    
     async function loadMonthlyOccupancyRate() {
-        const room_id = document.getElementById("mor_room").value;
-        const month = document.getElementById("mor_month").value;
-        const year = document.getElementById("mor_year").value;
-        try {
-            const resp = await fetch(`/api/dashboard2/monthly-occupancy-rate/?room_id=${room_id}&month=${month}&year=${year}`);
-            const data = await resp.json();
-            console.log(data)
-            document.getElementById("mor_result").textContent = data.occupancy
-        } catch (e) {
-            console.error(e)
-        }
+      const room_id = document.getElementById('mor_room').value
+      const month = document.getElementById('mor_month').value
+      const year = document.getElementById('mor_year').value
+      try {
+        const resp = await fetch(`/api/dashboard2/monthly-occupancy-rate/?room_id=${room_id}&month=${month}&year=${year}`)
+        const data = await resp.json()
+        console.log(data)
+        document.getElementById('mor_result').textContent = data.occupancy
+      } catch (e) {
+        console.error(e)
+      }
     }
-
+    
     async function loadGlobalMonthlyOccupancy() {
-        const month = document.getElementById("gmo_month").value;
-        const year = document.getElementById("gmo_year").value;
-        try {
-            const response = await fetch(`/api/dashboard2/global-monthly-occupancy/?month=${month}&year=${year}`);
-            const data = await response.json();
-            console.log(data)
-            document.getElementById("gmo_result").textContent = data.occupancy
-        } catch (e) {
-            console.error(e)
-        }
+      const month = document.getElementById('gmo_month').value
+      const year = document.getElementById('gmo_year').value
+      try {
+        const response = await fetch(`/api/dashboard2/global-monthly-occupancy/?month=${month}&year=${year}`)
+        const data = await response.json()
+        console.log(data)
+        document.getElementById('gmo_result').textContent = data.occupancy
+      } catch (e) {
+        console.error(e)
+      }
     }
-
+    
     async function loadPeakDayOccupnacy() {
-        const month = document.getElementById("pd_month").value;
-        const year = document.getElementById("pd_year").value;
-        try {
-            const response = await fetch(`/api/dashboard2/peak-day/?month=${month}&year=${year}`);
-            const data = await response.json();
-            console.log(data)
-            document.getElementById("pd_result").textContent = `Fecha: ${data.date} --- Rate: ${data.occupancy}`
-        } catch (e) {
-            console.error(e)
-        }
+      const month = document.getElementById('pd_month').value
+      const year = document.getElementById('pd_year').value
+      try {
+        const response = await fetch(`/api/dashboard2/peak-day/?month=${month}&year=${year}`)
+        const data = await response.json()
+        console.log(data)
+        document.getElementById('pd_result').textContent = `Fecha: ${data.date} --- Rate: ${data.occupancy}`
+      } catch (e) {
+        console.error(e)
+      }
     }
-</script>
-
+  </script>
 {% endblock %}
