@@ -1,10 +1,9 @@
 from django.urls import path
 
-from reservations.views import dashboard_page, dashboard2_view
 from .views import (
     availability_view,
     confirm_reservation_view,
-    create_reservation_view,
+    create_reservation_api_view,
     delete_reservation_view,
     globalMonthlyOccupancy,
     list_reservations_view,
@@ -17,7 +16,7 @@ from .views import (
 
 urlpatterns = [
     path("availability/", availability_view),
-    path("reservations/", create_reservation_view),
+    path("reservations/", create_reservation_api_view),
     path("my-reservations/", list_reservations_view),
     path("reservations/<int:reservation_id>/", delete_reservation_view),
     path("reservations/<int:reservation_id>/confirm/", confirm_reservation_view),

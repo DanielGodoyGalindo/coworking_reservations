@@ -15,7 +15,7 @@ from rooms.models import Room
 from reservations.services.reservations import (
     confirm_reservation,
     get_available_slots,
-    create_reservation,
+    create_reservation_service,
     ReservationOverlapError,
     ReservationConfirmationError,
 )
@@ -65,7 +65,7 @@ def availability_view(request):
 
 @csrf_exempt
 @require_POST
-def create_reservation_view(request):
+def create_reservation_api_view(request):
 
     if not request.user.is_authenticated:
         error_response("Authentication required", 401)
@@ -89,7 +89,7 @@ def create_reservation_view(request):
     if not idempotency_key:
         return error_response("Idempotency-Key header required", 400)
     try:
-        reservation = create_reservation(
+        reservation = create_reservation_service(
             idempotency_key=idempotency_key,
             room=room,
             date=date,

@@ -17,8 +17,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from reservations.views import dashboard2_view, dashboard_page, home
 from django.contrib.auth import views as auth_views
+from reservations.views import create_reservation_html_view, dashboard2_view, dashboard_page, home
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -27,5 +27,6 @@ urlpatterns = [
     path("dashboard2/", dashboard2_view, name="dashboard2"),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('', home)
+    path('', home),
+    path("create/", create_reservation_html_view, name="create_reservation"),
 ]

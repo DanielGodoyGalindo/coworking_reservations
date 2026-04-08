@@ -1,0 +1,35 @@
+<h2>Create reservation</h2>
+
+{% if error %}
+  <p style="color:red;">{{ error }}</p>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+
+  <label>Room:</label>
+  <select name="room" required>
+    {% for room in rooms %}
+      <option value="{{ room.id }}">{{ room.nombre }}</option>
+    {% endfor %}
+  </select>
+
+  <br /><br />
+
+  <label>Date:</label>
+  <input type="date" name="date" required />
+
+  <br /><br />
+
+  <label>Start time:</label>
+  <input type="time" name="start_time" required min="08:00" max="20:00">
+
+  <br /><br />
+
+  <label>End time:</label>
+  <input type="time" name="end_time" required min="08:00" max="20:00">
+
+  <br /><br />
+
+  <button type="submit">Create Reservation</button>
+</form>
