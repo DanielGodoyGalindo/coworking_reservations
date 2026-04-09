@@ -66,6 +66,8 @@ def availability_view(request):
 @csrf_exempt
 @require_POST
 def create_reservation_api_view(request):
+    
+    print(request)
 
     if not request.user.is_authenticated:
         error_response("Authentication required", 401)

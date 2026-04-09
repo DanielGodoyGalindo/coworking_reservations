@@ -1,10 +1,12 @@
 import uuid
 
 from django.shortcuts import render
+from reservations.models import Reservation
 from reservations.services.reservations import create_reservation_service
 from rooms.models import Room
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
+from datetime import datetime
 
 
 # Create your views here.
@@ -26,17 +28,42 @@ def home(request):
 
 
 def create_reservation_html_view(request):
+    rooms = Room.objects.all()
     if request.method == "POST":
         try:
+            date = datetime.strptime(request.POST["date"], "%Y-%m-%d").date()
+            start_time = datetime.strptime(request.POST["start_time"], "%H:%M").time()
+            end_time = datetime.strptime(request.POST["end_time"], "%H:%M").time()
+            room = Room.objects.get(id=request.POST["room"])
             reservation = create_reservation_service(
                 idempotency_key=str(uuid.uuid4()),
-                room=request.POST["room"],
-                date=request.POST["date"],
-                start_time=request.POST["start_time"],
-                end_time=request.POST["end_time"],
+                room=room,
+                date=date,
+                start_time=start_time,
+                end_time=end_time,
                 user=request.user,
             )
+            print(reservation)
             return redirect("my_reservations")
         except Exception as e:
-            return render(request, "reservations/create_reservation.html", {"error": str(e)})
-    return render(request, "reservations/create_reservation.html")
+            return render(
+                request,
+                "reservations/create_reservation.html",
+                {"error": str(e), "rooms": rooms},
+            )
+    return render(request, "reservations/create_reservation.html", {"rooms": rooms})
+
+
+def my_reservations_view(request):
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    reservations = (
+        Reservation.objects.filter(user=request.user)
+        .select_related("room")
+        .order_by("date", "start_time")
+    )
+
+    return render(
+        request, "reservations/my_reservations.html", {"reservations": reservations}
+    )

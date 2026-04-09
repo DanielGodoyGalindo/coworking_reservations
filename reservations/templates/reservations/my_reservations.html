@@ -1,0 +1,9 @@
+<h2>My Reservations</h2>
+
+<ul>
+  {% for r in reservations %}
+    <li>{{ r.room.name }} — {{ r.date }} {{ r.start_time }} - {{ r.end_time }}</li>
+  {% empty %}
+    <li>Not reservations for now.</li>
+  {% endfor %}
+</ul>
