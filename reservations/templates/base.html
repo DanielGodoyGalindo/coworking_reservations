@@ -3,8 +3,8 @@
 <html>
   <head>
     <title>Co-Working Reservations - Dashboards</title>
-    <link rel="stylesheet" href="{% static 'reservations/dashboard.css' %}" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'reservations/dashboard.css' %}" />
     <style>
       .navbar {
         background: linear-gradient(135deg, #1e293b, #334155) !important;
@@ -35,8 +35,11 @@
   <body>
     <div class="navbar">
       <div>
-        <a href="{% url 'dashboard' %}">Dashboard</a>
-        <a href="{% url 'dashboard2' %}">Dashboard 2</a>
+        <a href="{% url 'my_reservations' %}">My reservations</a>
+        {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'dashboard2' %}">Dashboard 2</a>
+        {% endif %}
       </div>
 
       <div>

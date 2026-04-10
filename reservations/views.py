@@ -5,28 +5,29 @@ from reservations.models import Reservation
 from reservations.services.reservations import create_reservation_service
 from rooms.models import Room
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import redirect
 from datetime import datetime
 
 
 # Create your views here.
-@login_required
+@staff_member_required
 def dashboard_page(request):
     return render(request, "dashboard.html")
 
 
-@login_required
+@staff_member_required
 def dashboard2_view(request):
     rooms = Room.objects.all()
     return render(request, "dashboard2.html", {"rooms": rooms})
 
-
+@login_required
 def home(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
     return redirect("login")
 
-
+@login_required
 def create_reservation_html_view(request):
     rooms = Room.objects.all()
     if request.method == "POST":
@@ -53,7 +54,7 @@ def create_reservation_html_view(request):
             )
     return render(request, "reservations/create_reservation.html", {"rooms": rooms})
 
-
+@login_required
 def my_reservations_view(request):
     if not request.user.is_authenticated:
         return redirect("login")

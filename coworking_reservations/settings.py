@@ -120,7 +120,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/my-reservations/'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Global variables
