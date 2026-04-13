@@ -2,15 +2,17 @@
 {% load static %}
 
 {% block content %}
+  <div class="new_reservation_button">
+    <a href="../create"><button>New Reservation</button></a>
+  </div>
 
-<h2>My Reservations</h2>
+  <h2>My Reservations</h2>
 
-<ul>
-  {% for r in reservations %}
-    <li>{{ r.room.name }} — {{ r.date }} {{ r.start_time }} - {{ r.end_time }}</li>
-  {% empty %}
-    <li>Not reservations for now.</li>
-  {% endfor %}
-</ul>
-
+  <ul>
+    {% for r in reservations %}
+      <li>{{ r.room.name }} — {{ r.date }} {{ r.start_time }} - {{ r.end_time }}</li>
+    {% empty %}
+      <li>Not reservations for now.</li>
+    {% endfor %}
+  </ul>
 {% endblock %}

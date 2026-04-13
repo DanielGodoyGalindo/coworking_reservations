@@ -1,35 +1,40 @@
-<h2>Create reservation</h2>
+{% extends 'base.html' %}
+{% load static %}
 
-<form method="post">
-  {% csrf_token %}
+{% block content %}
+  <h2>Create reservation</h2>
 
-  <label>Room:</label>
-  <select name="room" required>
-    {% for room in rooms %}
-      <option value="{{ room.id }}">{{ room.name }}</option>
-    {% endfor %}
-  </select>
+  <form method="post">
+    {% csrf_token %}
 
-  <br /><br />
+    <label>Room:</label>
+    <select name="room" required>
+      {% for room in rooms %}
+        <option value="{{ room.id }}">{{ room.name }}</option>
+      {% endfor %}
+    </select>
 
-  <label>Date:</label>
-  <input type="date" name="date" required />
+    <br /><br />
 
-  <br /><br />
+    <label>Date:</label>
+    <input type="date" name="date" required />
 
-  <label>Start time:</label>
-  <input type="time" name="start_time" required min="08:00" max="20:00">
+    <br /><br />
 
-  <br /><br />
+    <label>Start time:</label>
+    <input type="time" name="start_time" required min="08:00" max="20:00" />
 
-  <label>End time:</label>
-  <input type="time" name="end_time" required min="08:00" max="20:00">
+    <br /><br />
 
-  <br /><br />
+    <label>End time:</label>
+    <input type="time" name="end_time" required min="08:00" max="20:00" />
 
-  <button type="submit">Create Reservation</button>
-</form>
+    <br /><br />
 
-{% if error %}
-  <p style="color:red;">{{ error }}</p>
-{% endif %}
+    <button type="submit">Create Reservation</button>
+  </form>
+
+  {% if error %}
+    <p style="color:red;">{{ error }}</p>
+  {% endif %}
+{% endblock %}

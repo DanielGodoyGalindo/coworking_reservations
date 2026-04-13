@@ -125,6 +125,12 @@ canvas {
     text-align: center;
 }
 
+.new_reservation_button {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: end;
+}
+
 @media (min-width: 900px) {
 
     body {
