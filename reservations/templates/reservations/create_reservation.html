@@ -4,22 +4,49 @@
 {% block content %}
   <h2>Create reservation</h2>
 
-  <form method="post">
-    {% csrf_token %}
-
+  <!-- Form GET para ver slots -->
+  <form method="get">
     <label>Room:</label>
     <select name="room" required>
+      <option value="">-- select --</option>
       {% for room in rooms %}
-        <option value="{{ room.id }}">{{ room.name }}</option>
+        <option value="{{ room.id }}"
+          {% if request.GET.room == room.id|stringformat:"s" %}selected{% endif %}
+        >
+          {{ room.name }}
+        </option>
       {% endfor %}
     </select>
 
     <br /><br />
 
     <label>Date:</label>
-    <input type="date" name="date" required />
+    <input type="date" name="date" value="{{ request.GET.date }}" required>
 
     <br /><br />
+
+    <button type="submit">Ver slots disponibles</button>
+  </form>
+
+  <br />
+
+  {% if available_slots %}
+    <h3>Available slots</h3>
+    <ul>
+      {% for start, end in available_slots %}
+        <li>{{ start|time:"H:i" }} - {{ end|time:"H:i" }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <hr>
+
+  <!-- Form POST para crear la reserva -->
+  <form method="post">
+    {% csrf_token %}
+
+    <input type="hidden" name="room" value="{{ request.GET.room }}">
+    <input type="hidden" name="date" value="{{ request.GET.date }}">
 
     <label>Start time:</label>
     <input type="time" name="start_time" required min="08:00" max="20:00" />

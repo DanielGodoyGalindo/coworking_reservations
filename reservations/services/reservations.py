@@ -2,8 +2,9 @@ from django.db import transaction
 from coworking_reservations import settings
 from reservations.models import Reservation
 from django.utils import timezone
-from datetime import datetime
-from datetime import timedelta, time
+import datetime
+from datetime import timedelta
+from datetime import time
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
