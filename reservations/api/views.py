@@ -34,19 +34,34 @@ from datetime import datetime
 
 @require_GET
 def availability_view(request):
-
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Authentication required"}, status=401)
     room_id = request.GET.get("room_id")
     date_str = request.GET.get("date")
     if not room_id or not date_str:
-        error_response("room_id and date are required", 400)
+        return error_response("room_id and date are required", 400)
     try:
         date = date_type.fromisoformat(date_str)
     except ValueError:
-        error_response("Invalid date format (YYYY-MM-DD)", 400)
+        return error_response("Invalid date format (YYYY-MM-DD)", 400)
+    
+    # Ensure to show only valid dates
+    current_date = datetime.now().date()
+    now_time = datetime.now().time()
+    if date < current_date:
+        return error_response("Selected date is in the past", 400)
+    
     room = get_object_or_404(Room, id=room_id)
     slots = get_available_slots(room=room, date=date)
+    
+    # Show only future slots
+    if date == current_date:
+        slots = [
+            (start, end)
+            for start, end in slots
+            if start > now_time
+        ]
+    
     return JsonResponse(
         {
             "room_id": room.id,

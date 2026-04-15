@@ -4,49 +4,33 @@
 {% block content %}
   <h2>Create reservation</h2>
 
-  <!-- Form GET para ver slots -->
-  <form method="get">
-    <label>Room:</label>
-    <select name="room" required>
-      <option value="">-- select --</option>
-      {% for room in rooms %}
-        <option value="{{ room.id }}"
-          {% if request.GET.room == room.id|stringformat:"s" %}selected{% endif %}
-        >
-          {{ room.name }}
-        </option>
-      {% endfor %}
-    </select>
+  <label>Room:</label>
+  <select id="room" required onchange="loadSlots()">
+    <option value="">-- select --</option>
+    {% for room in rooms %}
+      <option value="{{ room.id }}">{{ room.name }}</option>
+    {% endfor %}
+  </select>
 
-    <br /><br />
+  <br /><br />
 
-    <label>Date:</label>
-    <input type="date" name="date" value="{{ request.GET.date }}" required>
+  <label>Date:</label>
+  <input type="date" id="date" required onchange="loadSlots()" />
 
-    <br /><br />
+  <br /><br />
 
-    <button type="submit">Ver slots disponibles</button>
-  </form>
+  <h3>Available slots</h3>
+  <div id="slots">
+    <p>Select room and date</p>
+  </div>
 
-  <br />
+  <hr />
 
-  {% if available_slots %}
-    <h3>Available slots</h3>
-    <ul>
-      {% for start, end in available_slots %}
-        <li>{{ start|time:"H:i" }} - {{ end|time:"H:i" }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-
-  <hr>
-
-  <!-- Form POST para crear la reserva -->
   <form method="post">
     {% csrf_token %}
 
-    <input type="hidden" name="room" value="{{ request.GET.room }}">
-    <input type="hidden" name="date" value="{{ request.GET.date }}">
+    <input type="hidden" name="room" id="room_hidden" />
+    <input type="hidden" name="date" id="date_hidden" />
 
     <label>Start time:</label>
     <input type="time" name="start_time" required min="08:00" max="20:00" />
@@ -64,4 +48,42 @@
   {% if error %}
     <p style="color:red;">{{ error }}</p>
   {% endif %}
+
+  <script>
+    function loadSlots() {
+      const room = document.getElementById('room').value
+      const date = document.getElementById('date').value
+    
+      document.getElementById('room_hidden').value = room
+      document.getElementById('date_hidden').value = date
+    
+      if (!room || !date) {
+        document.getElementById('slots').innerHTML = '<p>Select room and date</p>'
+        return
+      }
+    
+      fetch(`/api/availability/?room_id=${room}&date=${date}`)
+        .then((response) => response.json())
+        .then((data) => {
+          const container = document.getElementById('slots')
+          container.innerHTML = ''
+    
+          if (data.error) {
+            container.innerHTML = `<p style="color:red;">${data.error}</p>`
+            return
+          }
+    
+          if (data.slots.length === 0) {
+            container.innerHTML = '<p>No available slots</p>'
+            return
+          }
+    
+          data.slots.forEach((slot) => {
+            const div = document.createElement('div')
+            div.textContent = `${slot.start} - ${slot.end}`
+            container.appendChild(div)
+          })
+        })
+    }
+  </script>
 {% endblock %}

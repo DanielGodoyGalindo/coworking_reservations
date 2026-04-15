@@ -19,8 +19,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from reservations.views import create_reservation_html_view, dashboard2_view, dashboard_page, my_reservations_view
+from django.shortcuts import redirect
 
 urlpatterns = [
+    path('', lambda request: redirect('login'), name='root'),
     path("admin/", admin.site.urls),
     path("api/", include("reservations.api.urls")),
     path("dashboard/", dashboard_page, name="dashboard"),
