@@ -26,7 +26,7 @@
 
   <hr />
 
-  <form method="post">
+  <form id="reservationForm" onsubmit="submitReservation(event)">
     {% csrf_token %}
 
     <input type="hidden" name="room" id="room_hidden" />
@@ -44,6 +44,8 @@
 
     <button type="submit">Create Reservation</button>
   </form>
+
+  <div id="reservationResult"></div>
 
   {% if error %}
     <p style="color:red;">{{ error }}</p>
@@ -83,6 +85,50 @@
             div.textContent = `${slot.start} - ${slot.end}`
             container.appendChild(div)
           })
+        })
+    }
+    
+    function submitReservation(event) {
+      event.preventDefault()
+    
+      const payload = {
+        room_id: document.getElementById('room_hidden').value,
+        date: document.getElementById('date_hidden').value,
+        start_time: document.querySelector('input[name="start_time"]').value,
+        end_time: document.querySelector('input[name="end_time"]').value
+      }
+    
+      fetch('/api/reservations/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Idempotency-Key': crypto.randomUUID()
+        },
+        body: JSON.stringify(payload)
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          const resultDiv = document.getElementById('reservationResult')
+    
+          if (data.error) {
+            resultDiv.innerHTML = `<p style="color:red;">${data.error}</p>`
+            return
+          }
+    
+          resultDiv.innerHTML = `
+              <br/>
+              <h3>Reservation created</h3>
+              <ul>
+                <li><strong>ID:</strong> ${data.id}</li>
+                <li><strong>Room:</strong> ${data.room_id}</li>
+                <li><strong>Date:</strong> ${data.date}</li>
+                <li><strong>Start:</strong> ${data.start_time}</li>
+                <li><strong>End:</strong> ${data.end_time}</li>
+                <li><strong>Status:</strong> ${data.status}</li>
+              </ul>
+              <a href="/my-reservations/">View all my reservations</a>
+            `
         })
     }
   </script>

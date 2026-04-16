@@ -2,9 +2,7 @@ from django.db import transaction
 from coworking_reservations import settings
 from reservations.models import Reservation
 from django.utils import timezone
-import datetime
-from datetime import timedelta
-from datetime import time
+from datetime import timedelta, datetime, time
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
@@ -87,8 +85,8 @@ def get_available_slots(*, room, date, slot_minutes=30, minimum_minutes=60):
     slots = []
 
     for start, end in free_ranges:
-        start_dt = datetime.datetime.combine(date, start)
-        end_dt = datetime.datetime.combine(date, end)
+        start_dt = datetime.combine(date, start)
+        end_dt = datetime.combine(date, end)
 
         while start_dt + timedelta(minutes=slot_minutes) <= end_dt:
             total_available = (end_dt - start_dt).total_seconds() / 60
