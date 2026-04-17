@@ -31,4 +31,5 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path("create/", create_reservation_html_view, name="create_reservation"),
     path("my-reservations/", my_reservations_view, name="my_reservations"),
+    path("my-reservations/<int:reservation_id>/", my_reservations_view),
 ]

@@ -18,6 +18,7 @@ from reservations.services.reservations import (
     create_reservation_service,
     ReservationOverlapError,
     ReservationConfirmationError,
+    get_user_reservations,
 )
 import json
 from datetime import date as date_type, time as time_type
@@ -28,8 +29,6 @@ from django.views.decorators.http import require_http_methods
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from datetime import datetime
 
 
 @require_GET
@@ -44,24 +43,20 @@ def availability_view(request):
         date = date_type.fromisoformat(date_str)
     except ValueError:
         return error_response("Invalid date format (YYYY-MM-DD)", 400)
-    
+
     # Ensure to show only valid dates
     current_date = datetime.now().date()
     now_time = datetime.now().time()
     if date < current_date:
         return error_response("Selected date is in the past", 400)
-    
+
     room = get_object_or_404(Room, id=room_id)
     slots = get_available_slots(room=room, date=date)
-    
+
     # Show only future slots
     if date == current_date:
-        slots = [
-            (start, end)
-            for start, end in slots
-            if start > now_time
-        ]
-    
+        slots = [(start, end) for start, end in slots if start > now_time]
+
     return JsonResponse(
         {
             "room_id": room.id,
@@ -155,7 +150,7 @@ def list_reservations_view(request):
         }
         for r in reservations
     ]
-    return JsonResponse({"reservations": data})
+    return JsonResponse({"reservations": data}, status=200)
 
 
 @require_http_methods(["DELETE"])
@@ -199,6 +194,26 @@ def confirm_reservation_view(request, reservation_id):
         },
         status=200,
     )
+
+
+@require_GET
+def list_reservations_view(request):
+    if not request.user.is_authenticated:
+        return error_response("Authentication required", 401)
+    reservations = get_user_reservations(request.user)
+    data = [
+        {
+            "id": r.id,
+            "room": r.room.name,
+            "room_id": r.room.id,
+            "date": r.date.isoformat(),
+            "start_time": r.start_time.strftime("%H:%M"),
+            "end_time": r.end_time.strftime("%H:%M"),
+            "status": r.status,
+        }
+        for r in reservations
+    ]
+    return JsonResponse({"reservations": data})
 
 
 def error_response(message, status_code):

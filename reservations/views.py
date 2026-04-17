@@ -1,5 +1,7 @@
 from django.shortcuts import render
+from reservations.api.views import list_reservations_view
 from reservations.models import Reservation
+from reservations.services.reservations import get_user_reservations
 from rooms.models import Room
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -28,13 +30,17 @@ def create_reservation_html_view(request):
 def my_reservations_view(request):
     if not request.user.is_authenticated:
         return redirect("login")
-
-    reservations = (
-        Reservation.objects.filter(user=request.user)
-        .select_related("room")
-        .order_by("date", "start_time")
-    )
-
+    reservations = list_reservations_view(request)
     return render(
         request, "reservations/my_reservations.html", {"reservations": reservations}
+    )
+    
+
+@login_required
+def my_reservations_view(request):
+    reservations = get_user_reservations(request.user)
+    return render(
+        request,
+        "reservations/my_reservations.html",
+        {"reservations": reservations},
     )

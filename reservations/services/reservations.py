@@ -18,7 +18,9 @@ class ReservationConfirmationError(Exception):
 
 
 @transaction.atomic
-def create_reservation_service(*, idempotency_key, room, date, start_time, end_time, user):
+def create_reservation_service(
+    *, idempotency_key, room, date, start_time, end_time, user
+):
 
     if date < timezone.localdate():
         raise ValueError("Cannot reserve in the past")
@@ -142,6 +144,14 @@ def confirm_reservation(*, reservation, user):
     reservation.save()
 
     return reservation
+
+
+def get_user_reservations(user):
+    return (
+        Reservation.objects.filter(user=user)
+        .select_related("room")
+        .order_by("date", "start_time")
+    )
 
 
 ##############

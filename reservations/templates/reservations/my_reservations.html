@@ -10,7 +10,7 @@
 
   <ul>
     {% for r in reservations %}
-      <li>{{ r.room.name }} — {{ r.date }} {{ r.start_time }} - {{ r.end_time }}</li>
+      <a href="/my-reservations/{{r.id}}/"><li>{{ r.room.name }} — {{ r.date }} {{ r.start_time }} - {{ r.end_time }}</li></a>
     {% empty %}
       <li>Not reservations for now.</li>
     {% endfor %}
