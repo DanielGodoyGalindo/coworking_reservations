@@ -3,6 +3,19 @@
 
 {% block content %}
 
-  <h2>Reservations details</h2>
+<h2>Reservation details</h2>
+
+{% if reservation %}
+  <ul>
+    <li><strong>ID:</strong> {{ reservation.id }}</li>
+    <li><strong>Room:</strong> {{ reservation.room.name }}</li>
+    <li><strong>Date:</strong> {{ reservation.date }}</li>
+    <li><strong>Start:</strong> {{ reservation.start_time }}</li>
+    <li><strong>End:</strong> {{ reservation.end_time }}</li>
+    <li><strong>Status:</strong> {{ reservation.status }}</li>
+  </ul>
+{% else %}
+  <p>No reservation found.</p>
+{% endif %}
 
 {% endblock %}

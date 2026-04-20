@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from reservations.views import create_reservation_html_view, dashboard2_view, dashboard_page, my_reservations_view
+from reservations.views import create_reservation_html_view, dashboard2_view, dashboard_page, my_reservation_info_view, my_reservations_view
 from django.shortcuts import redirect
 
 urlpatterns = [
@@ -31,5 +31,5 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path("create/", create_reservation_html_view, name="create_reservation"),
     path("my-reservations/", my_reservations_view, name="my_reservations"),
-    path("my-reservations/<int:reservation_id>/", my_reservations_view),
+    path("my-reservations/<int:reservation_id>/", my_reservation_info_view),
 ]

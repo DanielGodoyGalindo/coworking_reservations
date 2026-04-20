@@ -196,26 +196,6 @@ def confirm_reservation_view(request, reservation_id):
     )
 
 
-@require_GET
-def list_reservations_view(request):
-    if not request.user.is_authenticated:
-        return error_response("Authentication required", 401)
-    reservations = get_user_reservations(request.user)
-    data = [
-        {
-            "id": r.id,
-            "room": r.room.name,
-            "room_id": r.room.id,
-            "date": r.date.isoformat(),
-            "start_time": r.start_time.strftime("%H:%M"),
-            "end_time": r.end_time.strftime("%H:%M"),
-            "status": r.status,
-        }
-        for r in reservations
-    ]
-    return JsonResponse({"reservations": data})
-
-
 def error_response(message, status_code):
     return JsonResponse({"error": message}, status=status_code)
 

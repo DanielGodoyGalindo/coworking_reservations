@@ -154,6 +154,10 @@ def get_user_reservations(user):
     )
 
 
+def get_user_reservation(user, reservation_id):
+    return Reservation.objects.select_related("room").get(id=reservation_id, user=user)
+
+
 ##############
 # Automation #
 ##############
