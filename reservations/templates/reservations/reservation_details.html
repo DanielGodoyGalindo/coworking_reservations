@@ -14,6 +14,12 @@
     <li><strong>End:</strong> {{ reservation.end_time }}</li>
     <li><strong>Status:</strong> {{ reservation.status }}</li>
   </ul>
+
+  <select>
+    {% for state in states %}
+        <option>{{ state }}</option>
+    {% endfor %}
+  </select>
 {% else %}
   <p>No reservation found.</p>
 {% endif %}

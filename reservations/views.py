@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from reservations.api.views import list_reservations_view
 from reservations.models import Reservation
 from reservations.services.reservations import (
     get_user_reservation,
@@ -41,9 +40,10 @@ def my_reservations_view(request):
 
 @login_required
 def my_reservation_info_view(request, reservation_id):
+    states = Reservation.Status.choices
     reservation = get_user_reservation(request.user, reservation_id)
     return render(
         request,
         "reservations/reservation_details.html",
-        {"reservation": reservation},
+        {"reservation": reservation, "states": states},
     )
