@@ -6,20 +6,29 @@
 <h2>Reservation details</h2>
 
 {% if reservation %}
-  <ul>
+<ul>
     <li><strong>ID:</strong> {{ reservation.id }}</li>
     <li><strong>Room:</strong> {{ reservation.room.name }}</li>
     <li><strong>Date:</strong> {{ reservation.date }}</li>
     <li><strong>Start:</strong> {{ reservation.start_time }}</li>
     <li><strong>End:</strong> {{ reservation.end_time }}</li>
-    <li><strong>Status:</strong> {{ reservation.status }}</li>
-  </ul>
+    <li><strong>Status:</strong> 
+        <form action="" method="post">
+        {% csrf_token %}
+        <select name="status">
+        {% for status in statuses %}
+            <option value="{{ status }}" 
+        {% if status == reservation.status %}selected{% endif %}>{{ status }}
+            </option>
+        {% endfor %}
+        </select>
+<button type="submit">Change</button>
+</form>
 
-  <select>
-    {% for state in states %}
-        <option>{{ state }}</option>
-    {% endfor %}
-  </select>
+    </li>
+</ul>
+
+
 {% else %}
   <p>No reservation found.</p>
 {% endif %}

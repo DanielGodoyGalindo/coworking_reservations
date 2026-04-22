@@ -40,10 +40,17 @@ def my_reservations_view(request):
 
 @login_required
 def my_reservation_info_view(request, reservation_id):
-    states = Reservation.Status.choices
+    statuses = [value for value, label in Reservation.Status.choices]
     reservation = get_user_reservation(request.user, reservation_id)
+
+    if request.method == "POST":
+        new_status = request.POST.get("status")
+        if new_status in dict(Reservation.Status.choices):
+            reservation.status = new_status
+            reservation.save()
+
     return render(
         request,
         "reservations/reservation_details.html",
-        {"reservation": reservation, "states": states},
+        {"reservation": reservation, "statuses": statuses},
     )
