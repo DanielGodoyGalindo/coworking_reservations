@@ -23,7 +23,7 @@ from django.shortcuts import redirect
 
 urlpatterns = [
     path('', lambda request: redirect('login'), name='root'),
-    path("admin/", admin.site.urls),
+    path("admin/", admin.site.urls, name="admin"),
     path("api/", include("reservations.api.urls")),
     path("dashboard/", dashboard_page, name="dashboard"),
     path("dashboard2/", dashboard2_view, name="dashboard2"),
