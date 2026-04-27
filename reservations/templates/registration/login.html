@@ -1,5 +1,5 @@
 <head>
-    <title>Co-Working Reservations</title>
+  <title>Co-Working Reservations</title>
   <style>
     header {
       display: flex;
@@ -56,6 +56,18 @@
       display: block;
       margin: 10px auto;
     }
+    
+    #not_registered {
+      color: #f1f5f9;
+      text-align: center;
+      margin-top: 20px;
+      a {
+        color: #f1f5f9;
+      }
+      a:hover {
+        color: #6366f1;
+      }
+    }
   </style>
 </head>
 
@@ -71,4 +83,7 @@
       <button type="submit">Login</button>
     </form>
   </div>
+  <p id="not_registered">
+    Not registered? <a href=".">Register here</a>
+  </p>
 </body>
