@@ -1,5 +1,5 @@
 <head>
-  <title>Co-Working Reservations</title>
+  <title>Co-Working Reservations - Register</title>
   <style>
     header {
       display: flex;
@@ -12,7 +12,7 @@
       font-family: Arial, sans-serif;
     }
     
-    .form {
+    .form > form {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -52,21 +52,19 @@
       background: #4f46e5;
     }
     
-    .form form button {
-      display: block;
-      margin: 10px auto;
-    }
-    
-    #not_registered {
+    #already_registered {
       color: #f1f5f9;
       text-align: center;
       margin-top: 20px;
-      a {
-        color: #f1f5f9;
-      }
-      a:hover {
-        color: #6366f1;
-      }
+    }
+    
+    #already_registered a {
+      color: #f1f5f9;
+      text-decoration: none;
+    }
+    
+    #already_registered a:hover {
+      color: #6366f1;
     }
   </style>
 </head>
@@ -74,16 +72,34 @@
 <body>
   <header>
     <h2>Welcome to Co-Working Reservations</h2>
-    <h3>Login</h3>
+    <h3>Create your account</h3>
   </header>
+
   <div class="form">
     <form method="post">
       {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Login</button>
+
+      <!-- Username -->
+      <label for="id_username">Username</label>
+      <input type="text" name="username" id="id_username" required />
+
+      <!-- Email -->
+      <label for="id_email">Email address</label>
+      <input type="email" name="email" id="id_email" required>
+
+      <!-- Password -->
+      <label for="id_password1">Password</label>
+      <input type="password" name="password1" id="id_password1" required />
+
+      <!-- Confirm Password -->
+      <label for="id_password2">Confirm Password</label>
+      <input type="password" name="password2" id="id_password2" required />
+
+      <button type="submit">Register</button>
     </form>
   </div>
-  <p id="not_registered">
-    Not registered? <a href="../register">Register here</a>
+
+  <p id="already_registered">
+    Already have an account? <a href="../login">Login here</a>
   </p>
 </body>

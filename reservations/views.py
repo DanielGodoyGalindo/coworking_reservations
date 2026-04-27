@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from reservations.models import Reservation
 from reservations.services.reservations import (
     get_user_reservation,
@@ -7,7 +6,8 @@ from reservations.services.reservations import (
 from rooms.models import Room
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
 
 
 # Create your views here.
@@ -54,3 +54,14 @@ def my_reservation_info_view(request, reservation_id):
         "reservations/reservation_details.html",
         {"reservation": reservation, "statuses": statuses},
     )
+
+
+def register_view(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("login")
+    else:
+        form = UserCreationForm()
+    return render(request, "registration/register.html", {"form": form})
